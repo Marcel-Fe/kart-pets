@@ -60,7 +60,7 @@ export function MainMenu() {
       </div>
 
       <div className="hero">
-        <img src="/art/icon.png" alt="KART PETS" className="hero-img" />
+        <img src="/art/icon-clean.png" alt="KART PETS" className="hero-img" />
       </div>
 
       <h2 className="section-title">Wähle deine Welt</h2>

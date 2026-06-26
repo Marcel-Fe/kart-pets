@@ -37,49 +37,57 @@ export function Garage() {
       <h2 className="section-title">🔧 Kart-Garage</h2>
 
       <KartPreview pet={pet} upgrades={upgradeLevels} />
-      <p className="hint preview-hint">{pet.name}s Kart – gekaufte Upgrades sind sichtbar.</p>
+      <p className="hint preview-hint">{pet.name}s Kart dreht sich – gekaufte Upgrades sind sichtbar.</p>
 
-      {UPGRADES.map((def) => {
-        const level = upgrades[def.id] ?? 0
-        const effect = effectFor(def.id, level)
-        const nextEffect = effectFor(def.id, level + 1)
-        const cost = costFor(def.id, level)
-        const isMax = cost === null
-        const canBuy = !isMax && coins >= cost
+      <p className="hint swipe-hint">← zur Seite wischen für alle Teile →</p>
+      <div className="upgrade-strip">
+        {UPGRADES.map((def) => {
+          const level = upgrades[def.id] ?? 0
+          const effect = effectFor(def.id, level)
+          const nextEffect = effectFor(def.id, level + 1)
+          const cost = costFor(def.id, level)
+          const isMax = cost === null
+          const canBuy = !isMax && coins >= cost
 
-        return (
-          <div key={def.id} className="profile-card upgrade-card">
-            <div className="upgrade-head">
-              <span className="upgrade-emoji" style={{ background: `${def.color}33` }}>
-                {def.emoji}
-              </span>
-              <div className="upgrade-title">
-                <div className="upgrade-name">{def.name}</div>
-                <div className="upgrade-desc">{def.beschreibung}</div>
+          return (
+            <div
+              key={def.id}
+              className="profile-card upgrade-card"
+              style={{ borderColor: `${def.color}99`, boxShadow: `0 0 26px ${def.color}33` }}
+            >
+              <div className="upgrade-head">
+                <span className="upgrade-emoji" style={{ background: `${def.color}33` }}>
+                  {def.emoji}
+                </span>
+                <div className="upgrade-title">
+                  <div className="upgrade-name">{def.name}</div>
+                  <span className="upgrade-level">Stufe {level}/{def.maxLevel}</span>
+                </div>
               </div>
-              <span className="upgrade-level">
-                {level}/{def.maxLevel}
-              </span>
-            </div>
 
-            <StatBar label={def.statLabel} value={(level / def.maxLevel) * 10} color={def.color} />
+              <div className="upgrade-desc">{def.beschreibung}</div>
 
-            <div className="upgrade-foot">
-              <span className="upgrade-effect">
-                {isMax ? `Maximal ${pctText(effect)}` : `${pctText(effect)} → ${pctText(nextEffect)}`}
-              </span>
+              <StatBar label={def.statLabel} value={(level / def.maxLevel) * 10} color={def.color} />
+
+              <div className="upgrade-effect-box">
+                <span className="upgrade-effect-label">{def.statLabel}-Bonus</span>
+                <span className="upgrade-effect" style={{ color: def.color }}>
+                  {isMax ? `Maximal ${pctText(effect)}` : `${pctText(effect)} → ${pctText(nextEffect)}`}
+                </span>
+              </div>
+
               <button
-                className="buy-btn"
+                className="buy-btn buy-btn-wide"
                 disabled={!canBuy}
                 onClick={() => buyUpgrade(def.id)}
                 style={canBuy ? { background: def.color } : undefined}
               >
-                {isMax ? 'MAX' : `🪙 ${cost}`}
+                {isMax ? '✓ MAX ausgebaut' : `Verbessern – 🪙 ${cost}`}
               </button>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
