@@ -4,6 +4,7 @@ import { PETS } from '../data/pets'
 import { TRACKS } from '../data/tracks'
 import { StatBar } from '../ui/StatBar'
 import { PetAvatar } from '../ui/PetAvatar'
+import { KartPreview } from '../ui/KartPreview'
 import { levelFromXp, STAGE_EMOJI, playerLevelFromPoints } from '../data/progression'
 import type { Rarity } from '../types'
 
@@ -23,6 +24,7 @@ export function MainMenu() {
   const selectTrack = useGameStore((s) => s.selectTrack)
   const petXp = useGameStore((s) => s.petXp)
   const ownedPets = useGameStore((s) => s.ownedPets)
+  const upgrades = useGameStore((s) => s.upgrades)
   const refreshDaily = useGameStore((s) => s.refreshDaily)
   const setScreen = useGameStore((s) => s.setScreen)
 
@@ -36,6 +38,12 @@ export function MainMenu() {
   const selectedTrack = TRACKS.find((t) => t.id === selectedTrackId) ?? TRACKS[0]
   const selectedTrackLocked = playerLevel < selectedTrack.unlockAtLevel
   const info = levelFromXp(petXp[selectedPetId] ?? 0)
+  const upgradeLevels = {
+    motor: upgrades.motor ?? 0,
+    reifen: upgrades.reifen ?? 0,
+    booster: upgrades.booster ?? 0,
+    panzer: upgrades.panzer ?? 0,
+  }
 
   return (
     <div className="screen menu">
@@ -103,6 +111,8 @@ export function MainMenu() {
           )
         })}
       </div>
+
+      <KartPreview pet={selected} upgrades={upgradeLevels} />
 
       <div className="pet-card" style={{ boxShadow: `0 0 40px ${selected.color}55` }}>
         <div className="pet-card-head">

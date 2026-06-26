@@ -57,7 +57,7 @@ export const TRACKS: TrackDef[] = [
     name: 'Candy Chaos',
     difficulty: 'Normal',
     laps: 3,
-    unlockAtLevel: 2,
+    unlockAtLevel: 1,
     theme: {
       sky: 'day',
       fog: '#ffd9ef',
@@ -81,7 +81,7 @@ export const TRACKS: TrackDef[] = [
     name: 'Vulkan-Rasen',
     difficulty: 'Schwer',
     laps: 3,
-    unlockAtLevel: 3,
+    unlockAtLevel: 2,
     theme: {
       sky: 'sunset',
       fog: '#5a2a22',
@@ -105,7 +105,7 @@ export const TRACKS: TrackDef[] = [
     name: 'Skyline City',
     difficulty: 'Schwer',
     laps: 3,
-    unlockAtLevel: 4,
+    unlockAtLevel: 3,
     theme: {
       sky: 'night',
       fog: '#0a0e26',
@@ -129,7 +129,7 @@ export const TRACKS: TrackDef[] = [
     name: 'Sternen-Kolonie',
     difficulty: 'Schwer',
     laps: 3,
-    unlockAtLevel: 5,
+    unlockAtLevel: 4,
     theme: {
       sky: 'night',
       fog: '#0c0824',

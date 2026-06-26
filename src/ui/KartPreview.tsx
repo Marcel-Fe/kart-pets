@@ -3,7 +3,11 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { PetFigure } from '../game/PetFigure'
+import { PETS } from '../data/pets'
 import type { Pet } from '../types'
+
+// Kart-Modelle vorab laden (kein Flackern beim Pet-Wechsel im Menü).
+PETS.forEach((p) => useGLTF.preload(p.model))
 
 export interface UpgradeLevels {
   motor: number
