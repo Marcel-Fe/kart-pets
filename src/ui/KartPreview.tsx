@@ -27,9 +27,9 @@ function PetSprite({ url }: { url: string }) {
   const tex = useLoader(THREE.TextureLoader, asset(url))
   tex.colorSpace = THREE.SRGBColorSpace
   const aspect = tex.image ? tex.image.width / tex.image.height : 1
-  const h = 2.6
+  const h = 2.2
   return (
-    <sprite position={[0, 1.55, 0.1]} scale={[h * aspect, h, 1]}>
+    <sprite position={[0, 1.5, 0.1]} scale={[h * aspect, h, 1]}>
       <spriteMaterial map={tex} transparent alphaTest={0.4} depthWrite={false} />
     </sprite>
   )
@@ -120,7 +120,12 @@ export function KartPreview({ pet, upgrades }: { pet: Pet; upgrades: UpgradeLeve
   const cut = cutoutPath(pet)
   return (
     <div className="kart-preview">
-      <Canvas shadows dpr={[1, 2]} camera={{ fov: 40, position: [0, 3, 6.5] }}>
+      <Canvas
+        shadows
+        dpr={[1, 2]}
+        camera={{ fov: 42, position: [0, 2.1, 5.4] }}
+        onCreated={({ camera }) => camera.lookAt(0, 0.85, 0)}
+      >
         <ambientLight intensity={0.65} />
         <hemisphereLight args={['#bfe3ff', '#202850', 0.6]} />
         <directionalLight position={[5, 9, 5]} intensity={1.5} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
