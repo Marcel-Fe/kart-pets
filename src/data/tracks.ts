@@ -1,5 +1,5 @@
-export type DecorKind = 'forest' | 'candy' | 'volcano' | 'city'
-export type GroundKind = 'grass' | 'candy' | 'rock' | 'city'
+export type DecorKind = 'forest' | 'candy' | 'volcano' | 'city' | 'ice'
+export type GroundKind = 'grass' | 'candy' | 'rock' | 'city' | 'ice'
 export type SkyKind = 'day' | 'sunset' | 'night'
 
 export interface TrackTheme {
@@ -107,17 +107,17 @@ export const TRACKS: TrackDef[] = [
     laps: 3,
     unlockAtLevel: 3,
     theme: {
-      sky: 'night',
-      fog: '#0a0e26',
-      ground: '#15182e',
-      groundTex: 'city',
-      road: '#24283e',
-      decor: 'city',
-      accent: '#00e5ff',
-      envPreset: 'night',
-      ambient: 0.2,
-      hemiSky: '#26305a',
-      hemiGround: '#05060f',
+      sky: 'day',
+      fog: '#cfe9ff',
+      ground: '#eaf6ff',
+      groundTex: 'ice',
+      road: '#bfe0f5',
+      decor: 'ice',
+      accent: '#4fd0ff',
+      envPreset: 'dawn',
+      ambient: 0.35,
+      hemiSky: '#dff1ff',
+      hemiGround: '#9fc6e6',
     },
     points: [
       [0, 115], [90, 95], [120, 25], [95, -55], [35, -110],

@@ -11,9 +11,51 @@ export function makeGroundTexture(kind: GroundKind): THREE.Texture {
       return makeRockTexture()
     case 'city':
       return makeCityTexture()
+    case 'ice':
+      return makeIceTexture()
     default:
       return makeGrassTexture()
   }
+}
+
+// Eis-Boden: helles Blauweiß mit Rissen und Glanz.
+export function makeIceTexture(): THREE.Texture {
+  const [c, ctx] = canvas(512)
+  const g = ctx.createLinearGradient(0, 0, 512, 512)
+  g.addColorStop(0, '#dff1ff')
+  g.addColorStop(1, '#a9d6f5')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 512, 512)
+  // glänzende Flecken
+  for (let i = 0; i < 260; i++) {
+    ctx.fillStyle = '#ffffff'
+    ctx.globalAlpha = 0.35
+    ctx.beginPath()
+    ctx.arc(Math.random() * 512, Math.random() * 512, 4 + Math.random() * 16, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // Risse
+  ctx.strokeStyle = '#7fb6e0'
+  ctx.globalAlpha = 0.5
+  ctx.lineWidth = 1.5
+  for (let i = 0; i < 26; i++) {
+    ctx.beginPath()
+    let x = Math.random() * 512
+    let y = Math.random() * 512
+    ctx.moveTo(x, y)
+    for (let s = 0; s < 4; s++) {
+      x += (Math.random() - 0.5) * 90
+      y += (Math.random() - 0.5) * 90
+      ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+  const tex = new THREE.CanvasTexture(c)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(45, 45)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
 }
 
 function canvas(size: number): [HTMLCanvasElement, CanvasRenderingContext2D] {

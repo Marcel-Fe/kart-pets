@@ -44,6 +44,7 @@ const HILL_COLOR: Record<string, string> = {
   candy: '#ff9ed0',
   volcano: '#3a2a26',
   city: '#1a1f3a',
+  ice: '#bfe2f5',
 }
 
 const CANDY_COLORS = ['#ff5db0', '#8f6bff', '#3fc1ff', '#ffd23f', '#5be08a']
@@ -140,6 +141,42 @@ function DecoItem({ d, decor }: { d: Deco; decor: string }) {
         <mesh position={[0, 1.4, 0]} castShadow>
           <cylinderGeometry args={[0.18, 0.3, 2.8, 6]} />
           <meshStandardMaterial color="#2a1c16" />
+        </mesh>
+      </group>
+    )
+  }
+
+  if (decor === 'ice') {
+    if (d.variant === 0)
+      // Eiskristall / Spitze
+      return (
+        <mesh position={[d.x, 1.1 * d.s, d.z]} scale={d.s} rotation={[0, d.rot, 0]} castShadow>
+          <coneGeometry args={[0.6, 2.6, 6]} />
+          <meshStandardMaterial color="#bfeaff" roughness={0.15} metalness={0.3} transparent opacity={0.92} />
+        </mesh>
+      )
+    if (d.variant === 1)
+      // Schneehügel
+      return (
+        <mesh position={[d.x, 0.3 * d.s, d.z]} scale={[d.s * 1.4, d.s * 0.8, d.s * 1.4]} castShadow>
+          <sphereGeometry args={[1, 16, 12]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.9} />
+        </mesh>
+      )
+    // verschneite Tanne
+    return (
+      <group position={[d.x, 0, d.z]} scale={d.s}>
+        <mesh position={[0, 1.1, 0]} castShadow>
+          <cylinderGeometry args={[0.28, 0.36, 2.2, 8]} />
+          <meshStandardMaterial color="#7a5638" />
+        </mesh>
+        <mesh position={[0, 2.8, 0]} castShadow>
+          <coneGeometry args={[1.4, 2.8, 10]} />
+          <meshStandardMaterial color="#e8f4ff" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 3.9, 0]} castShadow>
+          <coneGeometry args={[1, 1.8, 10]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.8} />
         </mesh>
       </group>
     )
