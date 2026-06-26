@@ -939,45 +939,25 @@ body {
 }
 .world-card {
   position: relative;
-  flex: 0 0 150px;
-  background: var(--panel);
-  border: 2px solid transparent;
-  border-radius: 18px;
+  flex: 0 0 auto;
+  background: none;
+  border: 3px solid transparent;
+  border-radius: 16px;
   padding: 0;
   overflow: hidden;
   cursor: pointer;
   color: var(--text);
   transition: transform 0.12s;
+  line-height: 0;
 }
 .world-card.active {
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.02);
 }
 .world-card-img {
-  height: 96px;
-  display: grid;
-  place-items: center;
-}
-.world-card-emoji {
-  font-size: 46px;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
-}
-.world-card-foot {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 8px 10px 10px;
-}
-.world-card-foot .world-name {
-  font-size: 14px;
-  font-weight: 700;
-}
-.diff-badge {
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: #14163a;
+  display: block;
+  height: 168px;
+  width: auto;
+  border-radius: 13px;
 }
 .lock-overlay {
   position: absolute;

@@ -15,17 +15,12 @@ const RARITY_COLOR: Record<Rarity, string> = {
   Legendary: '#ffb43f',
 }
 
-const WORLD_EMOJI: Record<string, string> = {
-  fluesterwald: '🌲',
-  candychaos: '🍭',
-  vulkanrasen: '🌋',
-  skylinecity: '🌃',
-  sternenkolonie: '🌌',
-}
-
-const DIFF_COLOR: Record<string, string> = {
-  Normal: '#3fc1ff',
-  Schwer: '#ff5d6c',
+const WORLD_IMG: Record<string, string> = {
+  fluesterwald: '/art/worlds/fluesterwald.png',
+  candychaos: '/art/worlds/candychaos.png',
+  vulkanrasen: '/art/worlds/vulkanrasen.png',
+  skylinecity: '/art/worlds/skylinecity.png',
+  sternenkolonie: '/art/worlds/sternenkolonie.png',
 }
 
 export function MainMenu() {
@@ -95,20 +90,9 @@ export function MainMenu() {
               key={t.id}
               className={'world-card' + (active ? ' active' : '') + (locked ? ' locked' : '')}
               onClick={() => !locked && selectTrack(t.id)}
-              style={active ? { borderColor: t.theme.accent, boxShadow: `0 0 26px ${t.theme.accent}77` } : undefined}
+              style={active ? { borderColor: t.theme.accent, boxShadow: `0 0 30px ${t.theme.accent}` } : undefined}
             >
-              <div
-                className="world-card-img"
-                style={{ background: `linear-gradient(150deg, ${t.theme.hemiSky}, ${t.theme.accent})` }}
-              >
-                <span className="world-card-emoji">{WORLD_EMOJI[t.id] ?? '🏁'}</span>
-              </div>
-              <div className="world-card-foot">
-                <span className="world-name">{t.name}</span>
-                <span className="diff-badge" style={{ background: DIFF_COLOR[t.difficulty] ?? '#888' }}>
-                  {t.difficulty}
-                </span>
-              </div>
+              <img className="world-card-img" src={WORLD_IMG[t.id]} alt={t.name} />
               {locked && (
                 <div className="lock-overlay">
                   <span className="lock-ico">🔒</span>

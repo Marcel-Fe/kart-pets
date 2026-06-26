@@ -30,7 +30,7 @@ export interface TrackDef {
 export const TRACKS: TrackDef[] = [
   {
     id: 'fluesterwald',
-    name: 'Flüsterwald',
+    name: 'Wald-Rallye',
     difficulty: 'Normal',
     laps: 3,
     unlockAtLevel: 1,
@@ -78,7 +78,7 @@ export const TRACKS: TrackDef[] = [
   },
   {
     id: 'vulkanrasen',
-    name: 'Vulkan-Rasen',
+    name: 'Vulkan Boost',
     difficulty: 'Schwer',
     laps: 3,
     unlockAtLevel: 2,
@@ -102,7 +102,7 @@ export const TRACKS: TrackDef[] = [
   },
   {
     id: 'skylinecity',
-    name: 'Skyline City',
+    name: 'Eis-Gipfel',
     difficulty: 'Schwer',
     laps: 3,
     unlockAtLevel: 3,
@@ -126,7 +126,7 @@ export const TRACKS: TrackDef[] = [
   },
   {
     id: 'sternenkolonie',
-    name: 'Sternen-Kolonie',
+    name: 'Neon Galaxy',
     difficulty: 'Schwer',
     laps: 3,
     unlockAtLevel: 4,
