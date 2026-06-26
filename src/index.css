@@ -993,7 +993,27 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Pet-Detailkarte (ohne große Emoji-Box, Bild kommt aus 3D-Vorschau) */
+/* Großes Pet-Portrait im Menü (echter Charakter statt 3D-Figur) */
+.pet-hero {
+  width: 100%;
+  max-width: 460px;
+  display: grid;
+  place-items: center;
+  padding: 8px 0 2px;
+}
+.pet-hero-img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.pet-hero-emoji {
+  font-size: 120px;
+  line-height: 1;
+}
+
+/* Pet-Detailkarte */
 .pet-card-info {
   text-align: center;
 }

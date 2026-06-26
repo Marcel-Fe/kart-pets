@@ -4,6 +4,7 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { PETS } from '../data/pets'
 import { PetFigure } from './PetFigure'
+import { asset } from '../utils/asset'
 import type { KartState } from './raceSim'
 import type { EarType } from '../types'
 
@@ -20,7 +21,7 @@ const SPARK_HIGH = new THREE.Color('#7fd0ff')
 // Lädt ein echtes GLB-Kart-Modell (Kenney Car Kit, CC0) und ergänzt
 // Effekte: Boost-Flamme, Drift-Funken, Unterboden-Glow in Pet-Farbe.
 export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType, kart }, ref) => {
-  const { scene } = useGLTF(path)
+  const { scene } = useGLTF(asset(path))
   const { model, seat } = useMemo(() => {
     const clone = scene.clone(true)
     clone.updateMatrixWorld(true)
@@ -123,4 +124,4 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType,
 KartModel.displayName = 'KartModel'
 
 // Alle Kart-Modelle vorab laden (kein Ruckler beim Rennstart).
-PETS.forEach((p) => useGLTF.preload(p.model))
+PETS.forEach((p) => useGLTF.preload(asset(p.model)))

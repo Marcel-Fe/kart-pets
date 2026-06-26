@@ -4,10 +4,11 @@ import { useGLTF, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { PetFigure } from '../game/PetFigure'
 import { PETS } from '../data/pets'
+import { asset } from '../utils/asset'
 import type { Pet } from '../types'
 
 // Kart-Modelle vorab laden (kein Flackern beim Pet-Wechsel im Menü).
-PETS.forEach((p) => useGLTF.preload(p.model))
+PETS.forEach((p) => useGLTF.preload(asset(p.model)))
 
 export interface UpgradeLevels {
   motor: number
@@ -18,7 +19,7 @@ export interface UpgradeLevels {
 
 // Dreht das Kart und visualisiert die gekauften Upgrades als Effekte am Modell.
 function KartModelStatic({ pet, upg }: { pet: Pet; upg: UpgradeLevels }) {
-  const { scene } = useGLTF(pet.model)
+  const { scene } = useGLTF(asset(pet.model))
   const { model, seat } = useMemo(() => {
     const clone = scene.clone(true)
     const char = clone.getObjectByName('character')

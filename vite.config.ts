@@ -2,11 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// base bleibt '/', wenn das Repo "<username>.github.io" heisst (Hosting an der Wurzel).
-// Fuer ein Projekt-Repo ("kart-pets") muesste base auf '/kart-pets/' geaendert
-// und alle Asset-Pfade ueber import.meta.env.BASE_URL geleitet werden.
+// Projekt-Repo "kart-pets" -> gehostet unter marcel-fe.github.io/kart-pets/.
+// Asset-Pfade laufen ueber asset()/import.meta.env.BASE_URL.
 export default defineConfig({
-  base: '/',
+  base: '/kart-pets/',
   plugins: [
     react(),
     VitePWA({
@@ -21,8 +20,8 @@ export default defineConfig({
         background_color: '#0a1030',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: '/kart-pets/',
+        scope: '/kart-pets/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },

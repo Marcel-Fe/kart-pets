@@ -4,7 +4,7 @@ import { PETS } from '../data/pets'
 import { TRACKS } from '../data/tracks'
 import { StatBar } from '../ui/StatBar'
 import { PetAvatar } from '../ui/PetAvatar'
-import { KartPreview } from '../ui/KartPreview'
+import { asset } from '../utils/asset'
 import { levelFromXp, STAGE_EMOJI, playerLevelFromPoints } from '../data/progression'
 import type { Rarity } from '../types'
 
@@ -33,7 +33,6 @@ export function MainMenu() {
   const selectTrack = useGameStore((s) => s.selectTrack)
   const petXp = useGameStore((s) => s.petXp)
   const ownedPets = useGameStore((s) => s.ownedPets)
-  const upgrades = useGameStore((s) => s.upgrades)
   const refreshDaily = useGameStore((s) => s.refreshDaily)
   const setScreen = useGameStore((s) => s.setScreen)
 
@@ -47,12 +46,6 @@ export function MainMenu() {
   const selectedTrack = TRACKS.find((t) => t.id === selectedTrackId) ?? TRACKS[0]
   const selectedTrackLocked = playerLevel < selectedTrack.unlockAtLevel
   const info = levelFromXp(petXp[selectedPetId] ?? 0)
-  const upgradeLevels = {
-    motor: upgrades.motor ?? 0,
-    reifen: upgrades.reifen ?? 0,
-    booster: upgrades.booster ?? 0,
-    panzer: upgrades.panzer ?? 0,
-  }
 
   return (
     <div className="screen menu">
@@ -71,7 +64,7 @@ export function MainMenu() {
 
       {/* Logo */}
       <div className="hero-bar">
-        <img src="/art/icon-clean.png" alt="" className="hero-logo" />
+        <img src={asset('/art/icon-clean.png')} alt="" className="hero-logo" />
         <div className="hero-title">
           KART <span>PETS</span>
         </div>
@@ -92,7 +85,7 @@ export function MainMenu() {
               onClick={() => !locked && selectTrack(t.id)}
               style={active ? { borderColor: t.theme.accent, boxShadow: `0 0 30px ${t.theme.accent}` } : undefined}
             >
-              <img className="world-card-img" src={WORLD_IMG[t.id]} alt={t.name} />
+              <img className="world-card-img" src={asset(WORLD_IMG[t.id])} alt={t.name} />
               {locked && (
                 <div className="lock-overlay">
                   <span className="lock-ico">🔒</span>
@@ -112,7 +105,13 @@ export function MainMenu() {
           Profil ›
         </button>
       </div>
-      <KartPreview pet={selected} upgrades={upgradeLevels} />
+      <div className="pet-hero" style={{ background: `radial-gradient(circle at 50% 40%, ${selected.color}55, transparent 70%)` }}>
+        {selected.image ? (
+          <img className="pet-hero-img" src={asset(selected.image)} alt={selected.name} />
+        ) : (
+          <span className="pet-hero-emoji">{selected.emoji}</span>
+        )}
+      </div>
 
       <div className="pet-card" style={{ boxShadow: `0 0 40px ${selected.color}44` }}>
         <div className="pet-card-info">

@@ -1,3 +1,4 @@
+import { asset } from '../utils/asset'
 import type { Pet } from '../types'
 
 type Variant = 'chip' | 'card' | 'hero'
@@ -11,7 +12,7 @@ const EMOJI_CLASS: Record<Variant, string> = {
 // Zeigt das Charakter-Portrait (aus dem Roster), Fallback ist das Emoji.
 export function PetAvatar({ pet, variant = 'chip' }: { pet: Pet; variant?: Variant }) {
   if (pet.image) {
-    return <img className={`pet-avatar pet-avatar-${variant}`} src={pet.image} alt={pet.name} />
+    return <img className={`pet-avatar pet-avatar-${variant}`} src={asset(pet.image)} alt={pet.name} />
   }
   return <span className={EMOJI_CLASS[variant]}>{pet.emoji}</span>
 }
