@@ -51,14 +51,16 @@ export function MainMenu() {
     <div className="screen menu">
       {/* Währungen */}
       <div className="topbar">
-        <div className="currency">
-          <span className="coin">🪙</span> {coins}
+        <div className="currency lvl-pill">
+          <span className="coin">⭐</span> <span className="cur-val">Lvl {playerLevel}</span>
         </div>
         <div className="currency">
-          <span className="coin">💎</span> {diamonds}
+          <span className="coin">🪙</span> <span className="cur-val">{coins}</span>
+          <button className="cur-plus" onClick={() => setScreen('shop')} aria-label="Münzen kaufen">+</button>
         </div>
         <div className="currency">
-          <span className="coin">⭐</span> Lvl {playerLevel}
+          <span className="coin">💎</span> <span className="cur-val">{diamonds}</span>
+          <button className="cur-plus" onClick={() => setScreen('shop')} aria-label="Diamanten kaufen">+</button>
         </div>
       </div>
 
