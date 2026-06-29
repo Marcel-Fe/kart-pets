@@ -10,6 +10,7 @@ export interface Pet {
   rarity: Rarity
   color: string // kart body color
   image?: string // path to character portrait PNG (fallback: emoji)
+  cutImage?: string // freigestelltes PNG (transparent) für großen Held/Podest
   model: string // path to GLB kart model
   earType: EarType // shape of the animal figure
   speed: number // 1..10 -> affects max speed

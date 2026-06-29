@@ -1425,23 +1425,24 @@ body::before {
 }
 .hero-podest-img {
   position: relative;
-  width: 196px;
   height: 196px;
-  object-fit: cover;
-  border-radius: 28px;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  width: auto;
+  max-width: 94%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.55));
   z-index: 1;
 }
 .hero-podest-disc {
   position: absolute;
-  bottom: 6px;
+  bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
-  height: 40px;
+  width: 200px;
+  height: 34px;
   border-radius: 50%;
-  filter: blur(2px);
-  opacity: 0.8;
+  filter: blur(3px);
+  opacity: 0.75;
+  z-index: 0;
 }
 
 /* ---- Event-Banner ---- */

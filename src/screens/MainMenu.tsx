@@ -131,13 +131,13 @@ export function MainMenu() {
         </button>
       </div>
       <div className="hero-podest">
-        <div className="hero-glow" style={{ background: `radial-gradient(circle at 50% 38%, ${selected.color}66, transparent 68%)` }} />
-        {selected.image ? (
-          <img className="hero-podest-img" src={asset(selected.image)} alt={selected.name} />
+        <div className="hero-glow" style={{ background: `radial-gradient(circle at 50% 42%, ${selected.color}66, transparent 68%)` }} />
+        <div className="hero-podest-disc" style={{ background: `radial-gradient(ellipse at 50% 50%, ${selected.color}aa, ${selected.color}22 70%, transparent)` }} />
+        {selected.cutImage || selected.image ? (
+          <img className="hero-podest-img" src={asset((selected.cutImage ?? selected.image)!)} alt={selected.name} />
         ) : (
           <span className="pet-hero-emoji">{selected.emoji}</span>
         )}
-        <div className="hero-podest-disc" style={{ background: `radial-gradient(ellipse at 50% 50%, ${selected.color}aa, ${selected.color}22 70%, transparent)` }} />
       </div>
 
       <div className="pet-card" style={{ boxShadow: `0 0 40px ${selected.color}44` }}>
