@@ -11,6 +11,7 @@ export interface Pet {
   color: string // kart body color
   image?: string // path to character portrait PNG (fallback: emoji)
   cutImage?: string // freigestelltes PNG (transparent) für großen Held/Podest
+  model3d?: string // generiertes 3D-Modell (GLB) des Pets, von allen Seiten sichtbar
   model: string // path to GLB kart model
   earType: EarType // shape of the animal figure
   speed: number // 1..10 -> affects max speed

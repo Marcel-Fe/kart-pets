@@ -2,6 +2,7 @@ import { useGameStore } from '../store/gameStore'
 import { StatBar } from '../ui/StatBar'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
+import { PetModel3D } from '../ui/PetModel3D'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
 
 function pctText(factor: number): string {
@@ -44,20 +45,26 @@ export function Garage() {
 
       <h2 className="section-title">🔧 Kart-Garage</h2>
 
-      {/* Kart-Held wie auf den Bildern (freigestelltes Render statt Low-Poly-3D) */}
+      {/* Kart-Held: echtes 3D-Modell (drehbar) falls vorhanden, sonst Render-Bild */}
       <div className="garage-stage">
         <div
           className="garage-glow"
           style={{ background: `radial-gradient(circle at 50% 44%, ${pet.color}55, transparent 66%)` }}
         />
-        <div
-          className="garage-disc"
-          style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}cc, ${pet.color}22 60%, transparent)` }}
-        />
-        {pet.cutImage || pet.image ? (
-          <img className="garage-kart-img" src={asset((pet.cutImage ?? pet.image)!)} alt={pet.name} />
+        {pet.model3d ? (
+          <PetModel3D url={pet.model3d} />
         ) : (
-          <span className="pet-hero-emoji">{pet.emoji}</span>
+          <>
+            <div
+              className="garage-disc"
+              style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}cc, ${pet.color}22 60%, transparent)` }}
+            />
+            {pet.cutImage || pet.image ? (
+              <img className="garage-kart-img" src={asset((pet.cutImage ?? pet.image)!)} alt={pet.name} />
+            ) : (
+              <span className="pet-hero-emoji">{pet.emoji}</span>
+            )}
+          </>
         )}
       </div>
       <div className="pet-card-name garage-kart-name">{pet.name}s Kart</div>

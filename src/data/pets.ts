@@ -11,6 +11,7 @@ export const PETS: Pet[] = [
     color: '#ff7a2f',
     image: '/art/pets/fynnox.png',
     cutImage: '/art/pets-cut/fynnox.png',
+    model3d: '/models/pets/fynnox.glb',
     model: '/models/kart-oobi.glb',
     earType: 'fox',
     speed: 7,
