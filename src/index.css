@@ -1757,6 +1757,112 @@ body::before {
   filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.5));
 }
 
+/* =====================================================================
+   STRECKEN-AUSWAHL (Schritt 5) — Vollbild-Screen mit großen Welt-Karten
+   ===================================================================== */
+.track-list {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.track-card {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 3px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--panel);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s;
+}
+.track-card.active {
+  transform: scale(1.015);
+}
+.track-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.track-num {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(8, 12, 30, 0.78);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  font-weight: 900;
+  font-size: 17px;
+  z-index: 2;
+}
+.track-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  background: linear-gradient(to top, rgba(6, 9, 24, 0.92) 10%, rgba(6, 9, 24, 0.4) 60%, transparent);
+  z-index: 1;
+}
+.track-name {
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+.track-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.track-stars {
+  font-size: 15px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+.star-dim {
+  color: rgba(255, 255, 255, 0.28);
+}
+.track-diff {
+  font-size: 12px;
+  color: #d3dcff;
+  font-weight: 700;
+}
+.track-check {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #36e07a;
+  color: #06210f;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.track-card.locked {
+  cursor: not-allowed;
+}
+.track-card.locked .track-card-img {
+  filter: brightness(0.4) saturate(0.6);
+}
+
 /* Garage-Bühne: Kart-Render auf Podest (statt Low-Poly-3D) */
 .garage-stage {
   position: relative;

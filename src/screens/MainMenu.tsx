@@ -36,7 +36,7 @@ const TABS: { id: string; ico: string; label: string; screen?: Screen; anchor?: 
   { id: 'home', ico: '🏠', label: 'Home' },
   { id: 'pets', ico: '🐾', label: 'Pets', screen: 'eggs' },
   { id: 'garage', ico: '🔧', label: 'Garage', screen: 'garage' },
-  { id: 'tracks', ico: '🏁', label: 'Strecken', anchor: 'world-strip' },
+  { id: 'tracks', ico: '🏁', label: 'Strecken', screen: 'tracks' },
   { id: 'shop', ico: '🛒', label: 'Shop', screen: 'shop' },
 ]
 
