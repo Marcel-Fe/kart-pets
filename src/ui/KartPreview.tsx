@@ -18,18 +18,23 @@ export interface UpgradeLevels {
 PETS.forEach((p) => useGLTF.preload(asset(p.model)))
 
 function cutoutPath(pet: Pet): string | null {
-  if (!pet.image) return null
-  return pet.image.replace('/pets/', '/pets-cut/')
+  return pet.cutImage ?? (pet.image ? pet.image.replace('/pets/', '/pets-cut/') : null)
 }
 
-// Echter Charakter (freigestelltes Roster-Bild) als zur Kamera gerichtetes Sprite auf dem Kart.
+// Echter Charakter als Sprite auf dem 3D-Kart. Die freigestellten Bilder zeigen den
+// ganzen Charakter inkl. eigenem Mini-Kart – per UV-Crop nur Kopf+Oberkörper zeigen,
+// damit es nicht doppelt mit dem 3D-Kart wirkt.
+const SPRITE_FRAC = 0.58 // oberer sichtbarer Anteil des Bildes
 function PetSprite({ url }: { url: string }) {
   const tex = useLoader(THREE.TextureLoader, asset(url))
   tex.colorSpace = THREE.SRGBColorSpace
-  const aspect = tex.image ? tex.image.width / tex.image.height : 1
-  const h = 2.2
+  tex.offset.set(0, 1 - SPRITE_FRAC)
+  tex.repeat.set(1, SPRITE_FRAC)
+  const fullAspect = tex.image ? tex.image.width / tex.image.height : 1
+  const visAspect = fullAspect / SPRITE_FRAC
+  const h = 1.5
   return (
-    <sprite position={[0, 1.5, 0.1]} scale={[h * aspect, h, 1]}>
+    <sprite position={[0, 1.32, 0.1]} scale={[h * visAspect, h, 1]}>
       <spriteMaterial map={tex} transparent alphaTest={0.4} depthWrite={false} />
     </sprite>
   )
