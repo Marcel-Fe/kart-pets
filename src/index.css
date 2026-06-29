@@ -446,7 +446,7 @@ body {
 }
 .hud-coins {
   position: absolute;
-  top: calc(56px + env(safe-area-inset-top));
+  top: calc(108px + env(safe-area-inset-top));
   right: 12px;
   background: rgba(10, 16, 48, 0.7);
   border: 1px solid rgba(255, 194, 63, 0.5);
@@ -458,9 +458,68 @@ body {
 }
 .hud-boost {
   position: absolute;
-  top: calc(12px + env(safe-area-inset-top));
+  top: calc(60px + env(safe-area-inset-top));
   right: 12px;
   width: 130px;
+}
+.hud-exit {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(10, 16, 48, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--text);
+  font-size: 17px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 6;
+}
+.hud-exit:active {
+  transform: scale(0.94);
+}
+
+/* Verlassen-Bestätigung */
+.race-pause {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 9, 24, 0.72);
+  backdrop-filter: blur(3px);
+}
+.race-pause-card {
+  width: 86%;
+  max-width: 360px;
+  background: linear-gradient(180deg, #1c2560, #141a44);
+  border: 1px solid rgba(130, 155, 235, 0.3);
+  border-radius: 20px;
+  padding: 22px 20px;
+  text-align: center;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+.race-pause-card h3 {
+  margin: 0 0 6px;
+  font-size: 21px;
+}
+.race-pause-card p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.race-pause-actions {
+  display: flex;
+  gap: 12px;
+}
+.race-pause-actions .cta {
+  margin-top: 0;
+  flex: 1;
+  padding: 14px;
+  font-size: 16px;
 }
 .hud-boost-label {
   font-size: 11px;

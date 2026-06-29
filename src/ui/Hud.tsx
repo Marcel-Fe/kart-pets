@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useHudStore } from '../store/hudStore'
+import { useGameStore } from '../store/gameStore'
 
 export function Hud() {
   const position = useHudStore((s) => s.position)
@@ -9,6 +11,9 @@ export function Hud() {
   const countdown = useHudStore((s) => s.countdown)
   const speedKmh = useHudStore((s) => s.speedKmh)
   const coins = useHudStore((s) => s.coins)
+  const setScreen = useGameStore((s) => s.setScreen)
+
+  const [confirmExit, setConfirmExit] = useState(false)
 
   return (
     <div className="hud">
@@ -32,6 +37,10 @@ export function Hud() {
         </div>
       </div>
 
+      <button className="hud-exit" onClick={() => setConfirmExit(true)} aria-label="Rennen verlassen">
+        ⏸
+      </button>
+
       <div className="hud-boost">
         <div className="hud-boost-label">BOOST</div>
         <div className="hud-boost-bar">
@@ -46,6 +55,23 @@ export function Hud() {
         <div className="countdown">{countdown}</div>
       )}
       {countdown === 0 && <CountdownGo />}
+
+      {confirmExit && (
+        <div className="race-pause">
+          <div className="race-pause-card">
+            <h3>Rennen verlassen?</h3>
+            <p>Dein Fortschritt in diesem Rennen geht verloren.</p>
+            <div className="race-pause-actions">
+              <button className="cta secondary" onClick={() => setConfirmExit(false)}>
+                ▶ Weiter
+              </button>
+              <button className="cta" onClick={() => setScreen('menu')}>
+                🏠 Verlassen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
