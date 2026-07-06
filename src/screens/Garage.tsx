@@ -49,6 +49,10 @@ export function Garage() {
       {/* Kart-Held: echtes 3D-Modell (drehbar) falls vorhanden, sonst Render-Bild */}
       <div className="garage-stage">
         <div
+          className="garage-bg"
+          style={{ backgroundImage: `url(${asset('/art/garage-bg.jpg')})` }}
+        />
+        <div
           className="garage-glow"
           style={{ background: `radial-gradient(circle at 50% 44%, ${pet.color}55, transparent 66%)` }}
         />

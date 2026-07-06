@@ -123,17 +123,7 @@ export function MainMenu() {
         </div>
       </div>
 
-      {/* Sekundäre Funktionen (bald) */}
-      <div className="util-row">
-        {UTILS.map((u) => (
-          <button key={u.label} className="util-btn" onClick={() => setSoon(u.label)}>
-            <span className="util-ico">{u.ico}</span>
-            <span className="util-lbl">{u.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Held-Podest – aktuelles Pet */}
+      {/* Held-Podest – aktuelles Pet (direkt oben, damit der Charakter präsent ist) */}
       <div className="section-head">
         <h2>🐾 Dein Pet</h2>
         <button className="link-btn" onClick={() => setScreen('petprofile')}>
@@ -170,6 +160,21 @@ export function MainMenu() {
         <div className="pet-ability">
           <strong>⚡ {selected.ability}</strong>
         </div>
+      </div>
+
+      {/* Direkt-Start unter dem Helden – klarer Haupt-Call-to-Action */}
+      <button className="cta start-cta hero-cta" disabled={selectedTrackLocked} onClick={() => setScreen('race')}>
+        {selectedTrackLocked ? `🔒 Strecke ab Lvl ${selectedTrack.unlockAtLevel}` : `🏁 Jetzt rennen – ${selectedTrack.name}`}
+      </button>
+
+      {/* Sekundäre Funktionen (bald) */}
+      <div className="util-row">
+        {UTILS.map((u) => (
+          <button key={u.label} className="util-btn" onClick={() => setSoon(u.label)}>
+            <span className="util-ico">{u.ico}</span>
+            <span className="util-lbl">{u.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Event-Banner (bald) */}

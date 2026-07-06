@@ -1314,6 +1314,27 @@ body::before {
   border-radius: 20px;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
 }
+/* Haupt-CTA direkt unter dem Helden: kräftiges Renn-Orange, mittig im Fluss */
+.hero-cta {
+  margin-top: 4px;
+  color: #2a1400;
+  background: linear-gradient(180deg, #ffc23f, #ff7a1f);
+  box-shadow: 0 8px 0 #b8560a, 0 12px 26px rgba(255, 122, 31, 0.5);
+  animation: hero-cta-pulse 2.4s ease-in-out infinite;
+}
+.hero-cta:active {
+  box-shadow: 0 5px 0 #b8560a;
+}
+.hero-cta:disabled {
+  animation: none;
+}
+@keyframes hero-cta-pulse {
+  0%, 100% { box-shadow: 0 8px 0 #b8560a, 0 12px 26px rgba(255, 122, 31, 0.5); }
+  50% { box-shadow: 0 8px 0 #b8560a, 0 12px 32px rgba(255, 160, 60, 0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-cta { animation: none; }
+}
 
 /* ---- Aktions-Buttons: kräftigere Farbakzente ---- */
 .action-btn {
@@ -1469,9 +1490,11 @@ body::before {
   position: relative;
   width: 100%;
   max-width: 460px;
-  height: 210px;
+  height: 296px;
+  flex-shrink: 0; /* Held darf im scrollbaren Flex-Column nicht schrumpfen */
   display: grid;
   place-items: center;
+  margin-top: -4px;
 }
 .hero-glow {
   position: absolute;
@@ -1480,24 +1503,38 @@ body::before {
 }
 .hero-podest-img {
   position: relative;
-  height: 178px;
+  height: 262px;
   width: auto;
-  max-width: 94%;
+  max-width: 96%;
   object-fit: contain;
-  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.55));
   z-index: 1;
+  transform-origin: 50% 100%;
+  animation: hero-idle 3.6s ease-in-out infinite;
+}
+@keyframes hero-idle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.012); }
 }
 .hero-podest-disc {
   position: absolute;
-  bottom: 14px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 34px;
+  width: 232px;
+  height: 40px;
   border-radius: 50%;
-  filter: blur(3px);
-  opacity: 0.75;
+  filter: blur(4px);
+  opacity: 0.8;
   z-index: 0;
+  animation: hero-disc 3.6s ease-in-out infinite;
+}
+@keyframes hero-disc {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+  50% { transform: translateX(-50%) scale(0.9); opacity: 0.62; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-podest-img, .hero-podest-disc, .garage-kart-img { animation: none; }
 }
 
 /* ---- Event-Banner ---- */
@@ -1923,14 +1960,32 @@ body::before {
   position: relative;
   width: 100%;
   max-width: 460px;
-  height: 240px;
+  height: 250px;
+  flex-shrink: 0; /* im scrollbaren Flex-Column nicht zusammenquetschen lassen */
   display: grid;
   place-items: center;
   border-radius: 22px;
   overflow: hidden;
-  background: radial-gradient(90% 60% at 50% 6%, rgba(255,170,80,0.18), transparent 62%), linear-gradient(180deg, #2a2431 0%, #191420 58%, #0f0b16 100%);
-  border: 1px solid rgba(130, 155, 235, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: #17121f;
+  border: 1px solid rgba(255, 190, 120, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 26px rgba(0, 0, 0, 0.4);
+}
+/* Echte Werkstatt-Kulisse als Hintergrund (Bild via Inline-Style gesetzt) */
+.garage-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 62%;
+  z-index: 0;
+}
+/* Sanfte Vignette + warmes Deckenlicht für Tiefe */
+.garage-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(75% 55% at 50% 8%, rgba(255, 200, 120, 0.28), transparent 60%),
+    linear-gradient(180deg, transparent 45%, rgba(10, 8, 16, 0.55) 100%);
 }
 .garage-glow {
   position: absolute;
@@ -2007,17 +2062,6 @@ body::before {
 }
 
 
-/* ---- Werkstatt-Boden & Wandlicht in der Garage ---- */
-.garage-stage::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 40%;
-  background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.28) 0 2px, transparent 2px 30px),
-    linear-gradient(180deg, #3c3550 0%, #241f32 100%);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,0.06);
-  z-index: 0;
-}
+/* Ebenen-Reihenfolge in der Garage: Kulisse < Glow/Schatten < Kart */
 .garage-glow, .garage-disc { z-index: 1; }
 .garage-kart-img { z-index: 2; }
