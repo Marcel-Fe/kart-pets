@@ -88,15 +88,12 @@ body {
 /* ---------- Pet selection ---------- */
 .pet-strip {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
-  overflow-x: auto;
   width: 100%;
   max-width: 460px;
   padding-bottom: 4px;
-  /* overflow-x:auto würde als Flex-Item sonst vertikal auf 0 schrumpfen */
-  flex-shrink: 0;
-  align-items: center;
-  min-height: 96px;
 }
 .pet-chip {
   flex: 0 0 auto;
@@ -826,20 +823,16 @@ body {
 /* Upgrade-Band: seitlich wischen statt runterscrollen */
 .upgrade-strip {
   display: flex;
+  flex-direction: column;
   gap: 14px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
   padding: 6px 4px 14px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
 }
 .upgrade-strip::-webkit-scrollbar {
   display: none;
 }
 .upgrade-strip .upgrade-card {
-  flex: 0 0 86%;
-  max-width: 360px;
-  scroll-snap-align: center;
+  width: 100%;
+  max-width: 460px;
   border: 2px solid transparent;
 }
 .swipe-hint {
@@ -898,8 +891,8 @@ body {
 
 /* Charakter-Portraits (Roster-Bilder) mit Emoji-Fallback */
 .pet-avatar {
-  object-fit: cover;
-  object-position: top center; /* Kopf/Ohren behalten, unten (Körper) beschneiden */
+  object-fit: contain; /* ganze Figur zeigen – nichts abschneiden (keine fehlenden Ohren) */
+  object-position: center;
   display: block;
 }
 .pet-avatar-chip {
@@ -991,15 +984,13 @@ body {
 /* Welten als Bild-Karten */
 .world-strip {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: flex-start;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  min-height: 180px;
+  gap: 10px;
   width: 100%;
   max-width: 460px;
   padding: 4px 2px 8px;
-  scrollbar-width: none;
 }
 .world-strip::-webkit-scrollbar {
   display: none;
@@ -1007,7 +998,7 @@ body {
 .world-card {
   position: relative;
   flex: 0 0 auto;
-  height: 168px;
+  height: 112px;
   background: none;
   border: 3px solid transparent;
   border-radius: 16px;
@@ -1937,7 +1928,7 @@ body::before {
   place-items: center;
   border-radius: 22px;
   overflow: hidden;
-  background: radial-gradient(120% 90% at 50% 15%, #20296b 0%, #0c1234 72%);
+  background: radial-gradient(90% 60% at 50% 6%, rgba(255,170,80,0.18), transparent 62%), linear-gradient(180deg, #2a2431 0%, #191420 58%, #0f0b16 100%);
   border: 1px solid rgba(130, 155, 235, 0.22);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
@@ -2014,3 +2005,19 @@ body::before {
   60% { transform: rotate(90deg); }
   80% { transform: rotate(78deg); }
 }
+
+
+/* ---- Werkstatt-Boden & Wandlicht in der Garage ---- */
+.garage-stage::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 40%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.28) 0 2px, transparent 2px 30px),
+    linear-gradient(180deg, #3c3550 0%, #241f32 100%);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.06);
+  z-index: 0;
+}
+.garage-glow, .garage-disc { z-index: 1; }
+.garage-kart-img { z-index: 2; }

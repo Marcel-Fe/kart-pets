@@ -87,6 +87,16 @@ export function MainMenu() {
 
   return (
     <div className="screen menu has-tabbar">
+      {/* Marke */}
+      <div style={{ width: '100%', maxWidth: 460, textAlign: 'center', marginBottom: -2 }}>
+        <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: 0.5, color: '#3fa9ff', textShadow: '0 2px 0 rgba(0,0,0,0.35)', lineHeight: 1 }}>
+          Pet <span style={{ color: '#ff8a1f' }}>Cars</span>
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#ffc23f' }}>
+          Das große Abenteuer
+        </div>
+      </div>
+
       {/* Spieler-Karte mit Währungen */}
       <div className="player-card">
         <div className="player-id">

@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'KART PETS',
-        short_name: 'KART PETS',
+        name: 'Pet Cars',
+        short_name: 'Pet Cars',
         description: 'Cartoon-Kart-Racer mit sammelbaren Renn-Tieren.',
         lang: 'de',
         theme_color: '#0a1030',

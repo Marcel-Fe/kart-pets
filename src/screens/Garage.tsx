@@ -72,7 +72,7 @@ export function Garage() {
         ))}
       </div>
 
-      <p className="hint swipe-hint">← zur Seite wischen für alle Teile →</p>
+      <p className="hint swipe-hint">🔧 Wähle ein Teil zum Verbessern</p>
       <div className="upgrade-strip">
         {UPGRADES.map((def) => {
           const level = upgrades[def.id] ?? 0
