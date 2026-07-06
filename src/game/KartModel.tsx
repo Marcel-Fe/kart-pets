@@ -24,13 +24,12 @@ const SPARK_HIGH = new THREE.Color('#7fd0ff')
 
 // Ganzes gerendertes Kart als 2D-Sprite (2.5D-Look wie klassische Mobile-Racer) –
 // sieht aus wie auf den Bildern, statt Low-Poly-Modell + Primitiven-Figur.
-function RaceCharSprite({ url }: { url: string }) {
+function RaceCharSprite({ url, height = 3.0, y = height * 0.46 }: { url: string; height?: number; y?: number }) {
   const tex = useLoader(THREE.TextureLoader, asset(url))
   tex.colorSpace = THREE.SRGBColorSpace
   const aspect = tex.image ? tex.image.width / tex.image.height : 0.83
-  const h = 3.0
   return (
-    <sprite position={[0, h * 0.46, 0]} scale={[h * aspect, h, 1]}>
+    <sprite position={[0, y, 0]} scale={[height * aspect, height, 1]}>
       <spriteMaterial map={tex} transparent alphaTest={0.35} depthWrite={false} />
     </sprite>
   )
@@ -141,12 +140,12 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType,
       <group>
         {spriteUrl ? (
           <>
-            {/* Boden-Schatten zur Erdung des Sprites */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-              <circleGeometry args={[1.15, 24]} />
-              <meshBasicMaterial color="#000000" transparent opacity={0.3} depthWrite={false} />
-            </mesh>
-            <RaceCharSprite url={spriteUrl} />
+            {/* Echtes 3D-Kart von hinten … */}
+            <primitive object={model} scale={2.4} rotation={[0, 0, 0]} position={[0, 0, 0]} />
+            {/* … mit dem Pet als Rück-Sprite auf dem Sitz (sitzt im Kart, von hinten sichtbar) */}
+            <group position={[0, seat.y * 2.4, seat.z * 2.4]}>
+              <RaceCharSprite url={spriteUrl} height={2.5} y={1.05} />
+            </group>
           </>
         ) : model3d ? (
           <>

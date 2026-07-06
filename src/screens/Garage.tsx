@@ -4,6 +4,8 @@ import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
 
+const DEFAULT_KART = '/art/karts/viper01.png' // Starter-Kart für alle Pets ohne eigenes Kart-Bild
+
 function pctText(factor: number): string {
   return `+${Math.round((factor - 1) * 100)}%`
 }
@@ -54,11 +56,12 @@ export function Garage() {
           className="garage-disc"
           style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}cc, ${pet.color}22 60%, transparent)` }}
         />
-        {pet.cutImage || pet.image ? (
-          <img className="garage-kart-img" src={asset((pet.cutImage ?? pet.image)!)} alt={pet.name} />
-        ) : (
-          <span className="pet-hero-emoji">{pet.emoji}</span>
-        )}
+        {/* Jedes Pet zeigt ein echtes Kart (Standard: Viper 01), nicht mehr sein Porträt */}
+        <img
+          className="garage-kart-img"
+          src={asset(pet.kartImage ?? DEFAULT_KART)}
+          alt={`${pet.name}s Kart`}
+        />
       </div>
       <div className="pet-card-name garage-kart-name">{pet.name}s Kart</div>
 

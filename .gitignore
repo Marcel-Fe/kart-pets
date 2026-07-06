@@ -23,3 +23,8 @@ dev-dist
 *.njsproj
 *.sln
 *.sw?
+
+# Quell-Boards & Dev-Tools (nicht deployen)
+public/art/incoming/
+scratch_*.py
+scratch_*.mjs

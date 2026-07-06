@@ -12,6 +12,7 @@ export interface Pet {
   image?: string // path to character portrait PNG (fallback: emoji)
   cutImage?: string // freigestelltes PNG (transparent) für großen Held/Podest
   raceImage?: string // freigestellte RÜCKANSICHT (Pet im Kart von hinten) fürs Rennen
+  kartImage?: string // freigestelltes Kart-PNG (3/4-Ansicht) für die Garage
   model3d?: string // generiertes 3D-Modell (GLB) des Pets, von allen Seiten sichtbar
   model3dRot?: [number, number, number] // Rotations-Offset (rad), damit das Pet in Fahrtrichtung blickt
   model: string // path to GLB kart model
