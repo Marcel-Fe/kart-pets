@@ -2237,3 +2237,151 @@ body::before {
 /* Ebenen-Reihenfolge in der Garage: Kulisse < Glow/Schatten < Kart */
 .garage-glow, .garage-disc { z-index: 1; }
 .garage-kart-img { z-index: 2; }
+
+/* =====================================================================
+   Goldener Cup (Meisterschaft)
+   ===================================================================== */
+.screen.cup {
+  gap: 14px;
+}
+.cup-head {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cup-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+.cup-intro {
+  width: 100%;
+  max-width: 460px;
+  background: linear-gradient(180deg, #1c2560, #141a44);
+  border: 1px solid rgba(255, 200, 90, 0.35);
+  border-radius: 18px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.cup-intro p { margin: 0 0 10px; }
+.cup-taunt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+  font-style: italic;
+}
+.cup-taunt .pet-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+.cup-next {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.cup-next-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cup-next-name { font-size: 20px; font-weight: 800; }
+.cup-next-sub { font-size: 12px; color: var(--muted); }
+
+.cup-standings {
+  width: 100%;
+  max-width: 460px;
+  background: linear-gradient(180deg, #1c2560, #141a44);
+  border: 1px solid rgba(130, 155, 235, 0.22);
+  border-radius: 18px;
+  padding: 12px 12px 14px;
+}
+.cup-standings-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 2px 4px 8px;
+}
+.cup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 12px;
+}
+.cup-row + .cup-row { margin-top: 4px; }
+.cup-row.me { background: rgba(63, 169, 255, 0.16); }
+.cup-row.rival { background: rgba(226, 59, 46, 0.14); }
+.cup-rank {
+  width: 26px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 15px;
+}
+.cup-av .pet-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}
+.cup-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+.cup-name em { color: var(--muted); font-style: normal; font-size: 12px; }
+.cup-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffd0c8;
+  background: rgba(226, 59, 46, 0.4);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.cup-pts {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--gold);
+}
+.cup-finale {
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+  background: linear-gradient(180deg, #2a2470, #171a4a);
+  border: 1px solid rgba(255, 205, 70, 0.5);
+  border-radius: 20px;
+  padding: 22px 18px;
+  box-shadow: 0 0 40px rgba(255, 180, 50, 0.25);
+}
+.cup-finale-title {
+  font-size: 30px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.cup-finale-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #dfe4ff;
+  margin: 0 0 16px;
+}

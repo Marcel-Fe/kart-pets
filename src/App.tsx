@@ -8,6 +8,7 @@ import { DailyTasks } from './screens/DailyTasks'
 import { PetEggs } from './screens/PetEggs'
 import { Shop } from './screens/Shop'
 import { TrackSelect } from './screens/TrackSelect'
+import { CupScreen } from './screens/CupScreen'
 
 export default function App() {
   const screen = useGameStore((s) => s.screen)
@@ -23,6 +24,7 @@ export default function App() {
       {screen === 'eggs' && <PetEggs />}
       {screen === 'shop' && <Shop />}
       {screen === 'tracks' && <TrackSelect />}
+      {screen === 'cup' && <CupScreen />}
     </div>
   )
 }

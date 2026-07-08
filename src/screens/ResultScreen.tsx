@@ -10,6 +10,9 @@ export function ResultScreen() {
   const selectedPetId = useGameStore((s) => s.selectedPetId)
   const petXp = useGameStore((s) => s.petXp)
   const setScreen = useGameStore((s) => s.setScreen)
+  const raceMode = useGameStore((s) => s.raceMode)
+  const continueCup = useGameStore((s) => s.continueCup)
+  const startFreeRace = useGameStore((s) => s.startFreeRace)
 
   const pet = getPet(selectedPetId)
   const xp = petXp[selectedPetId] ?? 0
@@ -77,9 +80,15 @@ export function ResultScreen() {
         <button className="cta secondary" onClick={() => setScreen('menu')}>
           Menü
         </button>
-        <button className="cta" onClick={() => setScreen('race')}>
-          Nochmal 🔁
-        </button>
+        {raceMode === 'cup' ? (
+          <button className="cta" onClick={continueCup}>
+            Weiter im Cup →
+          </button>
+        ) : (
+          <button className="cta" onClick={startFreeRace}>
+            Nochmal 🔁
+          </button>
+        )}
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { xpFromPoints } from '../data/progression'
 import { costFor, type UpgradeArea } from '../data/upgrades'
 import { getDailyTask } from '../data/dailyTasks'
 import { PETS } from '../data/pets'
+import { CUP_TRACKS, CUP_POINTS, petIdFromEntry } from '../data/cup'
 
 export const CORE_PET_IDS = ['fynnox', 'pompao', 'zippo', 'drako', 'neko']
 export const EGG_COST = 400
@@ -30,6 +31,11 @@ interface GameState {
   lastResult: RaceResult | null
   lastHatched: string | null
 
+  // Goldener Cup (Meisterschaft)
+  raceMode: 'free' | 'cup' // transient: wie das nächste Rennen gewertet wird
+  cupRaceIndex: number // abgeschlossene Cup-Rennen (0..CUP_TRACKS.length)
+  cupPoints: Record<string, number> // petId -> Cup-Punkte
+
   setScreen: (s: Screen) => void
   selectPet: (id: string) => void
   selectTrack: (id: string) => void
@@ -38,6 +44,10 @@ interface GameState {
   refreshDaily: () => void
   claimTask: (id: string) => void
   hatchEgg: () => void
+  startFreeRace: () => void
+  startCup: () => void
+  startCupRace: () => void
+  continueCup: () => void
 }
 
 export const useGameStore = create<GameState>()(
@@ -58,6 +68,9 @@ export const useGameStore = create<GameState>()(
       lastXpGain: 0,
       lastResult: null,
       lastHatched: null,
+      raceMode: 'free',
+      cupRaceIndex: 0,
+      cupPoints: {},
 
       setScreen: (s) => set({ screen: s }),
       selectPet: (id) => set({ selectedPetId: id }),
@@ -80,6 +93,19 @@ export const useGameStore = create<GameState>()(
           const fresh = state.dailyDate === today()
           const prog = fresh ? state.dailyProgress : {}
           const claimed = fresh ? state.claimedTasks : []
+
+          // Im Cup: allen Fahrern Meisterschaftspunkte nach Platz gutschreiben.
+          let cupPoints = state.cupPoints
+          let cupRaceIndex = state.cupRaceIndex
+          if (state.raceMode === 'cup') {
+            cupPoints = { ...state.cupPoints }
+            for (const e of result.entries) {
+              const pid = petIdFromEntry(e.id)
+              cupPoints[pid] = (cupPoints[pid] ?? 0) + (CUP_POINTS[e.rank] ?? 0)
+            }
+            cupRaceIndex = state.cupRaceIndex + 1
+          }
+
           return {
             lastResult: result,
             lastXpGain: gain,
@@ -93,6 +119,8 @@ export const useGameStore = create<GameState>()(
               wins: (prog.wins ?? 0) + (result.playerRank === 1 ? 1 : 0),
               coins: (prog.coins ?? 0) + result.coins,
             },
+            cupPoints,
+            cupRaceIndex,
             screen: 'result',
           }
         }),
@@ -126,6 +154,19 @@ export const useGameStore = create<GameState>()(
             lastHatched: pick.id,
           }
         }),
+
+      // Freies Rennen: aktuelle Strecke, keine Cup-Wertung.
+      startFreeRace: () => set({ raceMode: 'free', screen: 'race' }),
+      // Cup starten (Tabelle zurücksetzen) und zur Cup-Übersicht.
+      startCup: () => set({ cupRaceIndex: 0, cupPoints: {}, screen: 'cup' }),
+      // Nächstes Cup-Rennen fahren: passende Strecke wählen, als Cup werten.
+      startCupRace: () =>
+        set((state) => ({
+          raceMode: 'cup',
+          selectedTrackId: CUP_TRACKS[state.cupRaceIndex] ?? CUP_TRACKS[0],
+          screen: 'race',
+        })),
+      continueCup: () => set({ screen: 'cup' }),
     }),
     {
       name: 'kart-pets-save',
@@ -147,6 +188,8 @@ export const useGameStore = create<GameState>()(
         dailyProgress: state.dailyProgress,
         claimedTasks: state.claimedTasks,
         dailyDate: state.dailyDate,
+        cupRaceIndex: state.cupRaceIndex,
+        cupPoints: state.cupPoints,
       }),
     },
   ),

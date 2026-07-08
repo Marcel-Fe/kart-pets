@@ -55,6 +55,8 @@ export function MainMenu() {
   const claimedTasks = useGameStore((s) => s.claimedTasks)
   const refreshDaily = useGameStore((s) => s.refreshDaily)
   const setScreen = useGameStore((s) => s.setScreen)
+  const startFreeRace = useGameStore((s) => s.startFreeRace)
+  const startCup = useGameStore((s) => s.startCup)
 
   const [soon, setSoon] = useState('')
 
@@ -163,8 +165,8 @@ export function MainMenu() {
         </div>
       </div>
 
-      {/* Direkt-Start unter dem Helden – klarer Haupt-Call-to-Action */}
-      <button className="cta start-cta hero-cta" disabled={selectedTrackLocked} onClick={() => setScreen('race')}>
+      {/* Direkt-Start unter dem Helden – freies Rennen auf der gewählten Strecke */}
+      <button className="cta start-cta hero-cta" disabled={selectedTrackLocked} onClick={startFreeRace}>
         {selectedTrackLocked ? `🔒 Strecke ab Lvl ${selectedTrack.unlockAtLevel}` : `🏁 Jetzt rennen – ${selectedTrack.name}`}
       </button>
 
@@ -178,15 +180,15 @@ export function MainMenu() {
         ))}
       </div>
 
-      {/* Event-Banner (bald) */}
-      <button className="event-card" onClick={() => setSoon('Events')}>
+      {/* Goldener Cup – Meisterschaft mit Story & Rivale */}
+      <button className="event-card" onClick={startCup}>
         <div className="event-glow" />
         <div className="event-body">
-          <span className="event-tag">EVENT · BALD</span>
+          <span className="event-tag">MEISTERSCHAFT</span>
           <span className="event-title">🏆 Goldener Cup</span>
-          <span className="event-sub">Saison-Turnier mit Rangliste</span>
+          <span className="event-sub">4 Strecken · schlage den Champion Drako</span>
         </div>
-        <span className="event-cta">Vormerken ›</span>
+        <span className="event-cta">Spielen ›</span>
       </button>
 
       {/* Promo-Karten */}
@@ -265,7 +267,7 @@ export function MainMenu() {
         })}
       </div>
 
-      <button className="cta start-cta" disabled={selectedTrackLocked} onClick={() => setScreen('race')}>
+      <button className="cta start-cta" disabled={selectedTrackLocked} onClick={startFreeRace}>
         {selectedTrackLocked ? `🔒 Strecke ab Lvl ${selectedTrack.unlockAtLevel}` : `🏁 ${selectedTrack.name} – LOS!`}
       </button>
 
