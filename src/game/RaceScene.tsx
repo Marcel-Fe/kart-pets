@@ -113,6 +113,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const reported = useRef(false)
   const hudTimer = useRef(0)
   const camInit = useRef(false)
+  const camFov = useRef(62) // geglättetes FOV für den Boost-Kick
   const setHud = useHudStore((s) => s.set)
 
   // --- Sound-Zustand (Flanken-Erkennung) ---
@@ -258,6 +259,21 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         camera.position.lerp(camTarget, Math.min(1, dt * 4))
       }
       camera.lookAt(player.x + fx * 4, 1.5, player.z + fz * 4)
+
+      // Boost-Gefühl: FOV kurz weiten (Schub) + minimales Wackeln – nur die Kamera,
+      // Physik/Position bleibt unberührt (das Rauschen wird nächsten Frame weggelerpt).
+      const cam = camera as THREE.PerspectiveCamera
+      const targetFov = 62 + (boosting ? 8 : 0)
+      camFov.current += (targetFov - camFov.current) * Math.min(1, dt * 6)
+      if (Math.abs(cam.fov - camFov.current) > 0.01) {
+        cam.fov = camFov.current
+        cam.updateProjectionMatrix()
+      }
+      if (boosting) {
+        const now = performance.now()
+        camera.position.x += Math.sin(now * 0.05) * 0.06
+        camera.position.y += Math.cos(now * 0.043) * 0.06
+      }
     }
 
     // HUD aktualisieren (gedrosselt)
