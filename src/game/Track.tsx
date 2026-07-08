@@ -1,4 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { RoundedBox, Float } from '@react-three/drei'
 import { TrackCurve } from './trackCurve'
 import type { TrackTheme } from '../data/tracks'
@@ -7,6 +9,22 @@ import { makeGroundTexture, makeRoadTexture, makeKerbTexture } from './textures'
 interface Props {
   curve: TrackCurve
   theme: TrackTheme
+}
+
+// Wind: registrierte Objekte wippen sanft um ihre Basis (ein useFrame für alle).
+type SwayFn = (o: THREE.Object3D | null, phase: number, amp: number) => void
+function useWind(): SwayFn {
+  const reg = useRef(new Map<string, { o: THREE.Object3D; ph: number; amp: number }>())
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    const gust = 0.72 + 0.28 * Math.sin(t * 0.37)
+    reg.current.forEach((s) => {
+      s.o.rotation.z = Math.sin(t * 1.5 + s.ph) * s.amp * gust
+    })
+  })
+  return (o, ph, amp) => {
+    if (o) reg.current.set(o.uuid, { o, ph, amp })
+  }
 }
 
 interface Deco {
@@ -21,8 +39,9 @@ function useScatter(curve: TrackCurve): Deco[] {
   return useMemo(() => {
     const out: Deco[] = []
     const n = curve.samples.length
-    // Mehrere gestaffelte Bänder je Streckenseite → dichte Kulisse statt Einzelbäume.
-    const bands = [9, 16, 24, 36]
+    // Gestaffelte Bänder je Streckenseite → dichte Kulisse. Fernstes Band bewusst
+    // ausgedünnt (Nebel verdeckt die Ferne) für flüssige Bildrate auf dem Handy.
+    const bands = [9, 16, 24]
     for (let i = 0; i < n; i += 3) {
       const p = curve.samples[i]
       const nor = curve.normals[i]
@@ -30,7 +49,7 @@ function useScatter(curve: TrackCurve): Deco[] {
         for (const base of bands) {
           const dist = base + Math.random() * 8
           // weiter außen seltener, damit es nicht zu schwer wird
-          if (base > 30 && i % 6 !== 0) continue
+          if (base > 18 && i % 4 !== 0) continue
           out.push({
             x: p.x + nor.x * dist * side + (Math.random() - 0.5) * 6,
             z: p.z + nor.z * dist * side + (Math.random() - 0.5) * 6,
@@ -55,15 +74,16 @@ const HILL_COLOR: Record<string, string> = {
 
 const CANDY_COLORS = ['#ff5db0', '#8f6bff', '#3fc1ff', '#ffd23f', '#5be08a']
 
-function DecoItem({ d, decor }: { d: Deco; decor: string }) {
+function DecoItem({ d, decor, sway }: { d: Deco; decor: string; sway: SwayFn }) {
   if (decor === 'forest') {
     const greens = ['#1d7a3a', '#268f45', '#2f9e54', '#176b33']
     const g = greens[Math.abs(Math.round(d.x * 1.7 + d.z)) % greens.length]
     const g2 = greens[Math.abs(Math.round(d.x + d.z * 1.3)) % greens.length]
+    const ph = d.x * 0.6 + d.z * 0.4
     if (d.variant === 0)
-      // hohe, volle Tanne (4 Kegel-Schichten)
+      // hohe, volle Tanne (4 Kegel-Schichten) – wiegt sich im Wind
       return (
-        <group position={[d.x, 0, d.z]} scale={d.s} rotation={[0, d.rot, 0]}>
+        <group ref={(o) => sway(o, ph, 0.045)} position={[d.x, 0, d.z]} scale={d.s} rotation={[0, d.rot, 0]}>
           <mesh position={[0, 1.1, 0]} castShadow>
             <cylinderGeometry args={[0.3, 0.42, 2.2, 7]} />
             <meshStandardMaterial color="#5e4128" />
@@ -83,9 +103,9 @@ function DecoItem({ d, decor }: { d: Deco; decor: string }) {
         </group>
       )
     if (d.variant === 1)
-      // runder Laubbaum (Stamm + büschelige Krone)
+      // runder Laubbaum (Stamm + büschelige Krone) – wiegt sich im Wind
       return (
-        <group position={[d.x, 0, d.z]} scale={d.s}>
+        <group ref={(o) => sway(o, ph, 0.055)} position={[d.x, 0, d.z]} scale={d.s}>
           <mesh position={[0, 1.0, 0]} castShadow>
             <cylinderGeometry args={[0.26, 0.36, 2.0, 7]} />
             <meshStandardMaterial color="#6b4a2b" />
@@ -104,17 +124,26 @@ function DecoItem({ d, decor }: { d: Deco; decor: string }) {
           </mesh>
         </group>
       )
-    // niedriger Busch + Pilz-Tupfer (Bodenbewuchs)
+    // niedriger Busch (Bodenbewuchs) – nur an jedem 2. steht ein Fliegenpilz
+    const withMushroom = Math.abs(Math.round(d.x + d.z)) % 2 === 0
     return (
-      <group position={[d.x, 0, d.z]} scale={d.s}>
+      <group ref={(o) => sway(o, ph, 0.05)} position={[d.x, 0, d.z]} scale={d.s}>
         <mesh position={[0, 0.5, 0]} castShadow>
           <sphereGeometry args={[0.7, 10, 8]} />
           <meshStandardMaterial color={g} roughness={1} />
         </mesh>
-        <mesh position={[0.5, 0.35, 0.2]}>
-          <sphereGeometry args={[0.45, 9, 8]} />
-          <meshStandardMaterial color={g2} roughness={1} />
-        </mesh>
+        {withMushroom && (
+          <>
+            <mesh position={[0.6, 0.28, 0.25]}>
+              <cylinderGeometry args={[0.09, 0.12, 0.55, 7]} />
+              <meshStandardMaterial color="#f3ead6" roughness={0.8} />
+            </mesh>
+            <mesh position={[0.6, 0.62, 0.25]} castShadow>
+              <sphereGeometry args={[0.28, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+              <meshStandardMaterial color="#d8362f" roughness={0.55} />
+            </mesh>
+          </>
+        )}
       </group>
     )
   }
@@ -242,11 +271,139 @@ function DecoItem({ d, decor }: { d: Deco; decor: string }) {
   )
 }
 
+interface PropDef {
+  x: number
+  z: number
+  rot: number
+  type: number
+}
+
+// Straßenrand-Deko nach der Design-Bibel (Zaun, Laterne, Fass, Reifenstapel, Pylone, Blumen).
+function RoadsideProp({ p, sway }: { p: PropDef; sway: SwayFn }) {
+  const ph = p.x * 0.5 + p.z * 0.5
+  switch (p.type) {
+    case 0: // Holzzaun (läuft entlang der Strecke)
+      return (
+        <group position={[p.x, 0, p.z]} rotation={[0, p.rot, 0]}>
+          {[-1.4, 1.4].map((o) => (
+            <mesh key={o} position={[o, 0.6, 0]} castShadow>
+              <boxGeometry args={[0.18, 1.2, 0.18]} />
+              <meshStandardMaterial color="#7a5230" roughness={0.9} />
+            </mesh>
+          ))}
+          {[0.55, 0.95].map((y) => (
+            <mesh key={y} position={[0, y, 0]} castShadow>
+              <boxGeometry args={[3.0, 0.16, 0.12]} />
+              <meshStandardMaterial color="#8a5f38" roughness={0.9} />
+            </mesh>
+          ))}
+        </group>
+      )
+    case 1: // Laterne mit warmem Licht
+      return (
+        <group position={[p.x, 0, p.z]}>
+          <mesh position={[0, 1.6, 0]} castShadow>
+            <cylinderGeometry args={[0.08, 0.12, 3.2, 8]} />
+            <meshStandardMaterial color="#1c1c22" metalness={0.5} roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 3.35, 0]}>
+            <boxGeometry args={[0.4, 0.5, 0.4]} />
+            <meshStandardMaterial color="#ffdb7a" emissive="#ffbe4a" emissiveIntensity={1.8} />
+          </mesh>
+          <pointLight position={[0, 3.3, 0]} distance={9} intensity={7} color="#ffcf8a" />
+        </group>
+      )
+    case 2: // Holzfass
+      return (
+        <group position={[p.x, 0, p.z]} rotation={[0, p.rot, 0]}>
+          <mesh position={[0, 0.55, 0]} castShadow>
+            <cylinderGeometry args={[0.5, 0.42, 1.1, 14]} />
+            <meshStandardMaterial color="#8a5a30" roughness={0.85} />
+          </mesh>
+          {[0.28, 0.82].map((y) => (
+            <mesh key={y} position={[0, y, 0]}>
+              <cylinderGeometry args={[0.53, 0.53, 0.12, 14]} />
+              <meshStandardMaterial color="#4a3420" metalness={0.4} roughness={0.6} />
+            </mesh>
+          ))}
+        </group>
+      )
+    case 3: // Reifenstapel
+      return (
+        <group position={[p.x, 0, p.z]}>
+          {[0.35, 0.85, 1.3].map((y, i) => (
+            <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, i]} castShadow>
+              <torusGeometry args={[0.5, 0.22, 10, 18]} />
+              <meshStandardMaterial color="#1a1a1e" roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
+      )
+    case 4: // Leitkegel / Pylone
+      return (
+        <group position={[p.x, 0, p.z]}>
+          <mesh position={[0, 0.5, 0]} castShadow>
+            <coneGeometry args={[0.32, 1.0, 16]} />
+            <meshStandardMaterial color="#ff6a1f" roughness={0.6} />
+          </mesh>
+          <mesh position={[0, 0.55, 0]}>
+            <cylinderGeometry args={[0.24, 0.28, 0.2, 16]} />
+            <meshStandardMaterial color="#f4f4f4" roughness={0.7} />
+          </mesh>
+          <mesh position={[0, 0.06, 0]}>
+            <boxGeometry args={[0.7, 0.12, 0.7]} />
+            <meshStandardMaterial color="#ff6a1f" roughness={0.7} />
+          </mesh>
+        </group>
+      )
+    default: // Blumenbüschel (wiegt sich im Wind)
+      return (
+        <group ref={(o) => sway(o, ph, 0.08)} position={[p.x, 0, p.z]}>
+          <mesh position={[0, 0.18, 0]} castShadow>
+            <sphereGeometry args={[0.4, 10, 8]} />
+            <meshStandardMaterial color="#2f8f45" roughness={1} />
+          </mesh>
+          {[
+            [0.28, '#ff5db0'], [-0.24, '#ffd23f'], [0.05, '#ff7a2f'],
+          ].map(([ox, c], i) => (
+            <mesh key={i} position={[ox as number, 0.42, (i - 1) * 0.2]}>
+              <sphereGeometry args={[0.13, 8, 8]} />
+              <meshStandardMaterial color={c as string} emissive={c as string} emissiveIntensity={0.25} />
+            </mesh>
+          ))}
+        </group>
+      )
+  }
+}
+
 export function Track({ curve, theme }: Props) {
   const road = useMemo(() => curve.buildRoadGeometry(), [curve])
   const borderL = useMemo(() => curve.buildBorderGeometry(1), [curve])
   const borderR = useMemo(() => curve.buildBorderGeometry(-1), [curve])
   const scatter = useScatter(curve)
+  const sway = useWind()
+  // Straßenrand-Details entlang der Strecke (nur Dorf/Wald – passt zur Design-Bibel).
+  const roadside = useMemo<PropDef[]>(() => {
+    if (theme.decor !== 'forest') return []
+    const out: PropDef[] = []
+    const n = curve.samples.length
+    let k = 0
+    for (let i = 6; i < n; i += 15) {
+      const p = curve.samples[i]
+      const nor = curve.normals[i]
+      const tan = curve.tangents[i]
+      const side = k % 2 === 0 ? 1 : -1
+      const dist = 6.4 + (k % 3) * 0.5
+      out.push({
+        x: p.x + nor.x * dist * side,
+        z: p.z + nor.z * dist * side,
+        rot: Math.atan2(tan.x, tan.z),
+        type: k % 6,
+      })
+      k++
+    }
+    return out
+  }, [curve, theme.decor])
   const groundTex = useMemo(() => makeGroundTexture(theme.groundTex), [theme.groundTex])
   const roadTex = useMemo(() => makeRoadTexture(), [])
   const kerbTex = useMemo(() => makeKerbTexture(), [])
@@ -370,7 +527,12 @@ export function Track({ curve, theme }: Props) {
 
       {/* Theme-Dekoration */}
       {scatter.map((d, i) => (
-        <DecoItem key={i} d={d} decor={theme.decor} />
+        <DecoItem key={i} d={d} decor={theme.decor} sway={sway} />
+      ))}
+
+      {/* Straßenrand-Details (Zaun, Laterne, Fass, Reifen, Pylone, Blumen) */}
+      {roadside.map((p, i) => (
+        <RoadsideProp key={'rp' + i} p={p} sway={sway} />
       ))}
     </group>
   )
