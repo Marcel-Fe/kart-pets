@@ -414,6 +414,29 @@ body {
   inset: 0;
   pointer-events: none;
 }
+
+/* Speed-Linien: seitliche Streifen, die bei hohem Tempo einblenden (2D, kein 3D-Kostenpunkt). */
+.speed-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 14%),
+    linear-gradient(270deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 14%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.16) 0 2px,
+      rgba(255, 255, 255, 0) 2px 22px
+    );
+  -webkit-mask-image: radial-gradient(ellipse 62% 100% at 50% 50%, transparent 55%, #000 100%);
+  mask-image: radial-gradient(ellipse 62% 100% at 50% 50%, transparent 55%, #000 100%);
+  animation: speed-flicker 0.18s steps(2) infinite;
+}
+@keyframes speed-flicker {
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(1.04); }
+}
 .hud-top {
   position: absolute;
   top: calc(10px + env(safe-area-inset-top));

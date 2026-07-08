@@ -22,6 +22,7 @@ interface Props {
 
 const SPARK_LOW = new THREE.Color('#ffae3f')
 const SPARK_HIGH = new THREE.Color('#7fd0ff')
+const SMOKE_COUNT = 10 // Puffs im wiederverwendeten Pool
 
 // Ganzes gerendertes Kart als 2D-Sprite (2.5D-Look wie klassische Mobile-Racer) –
 // sieht aus wie auf den Bildern, statt Low-Poly-Modell + Primitiven-Figur.
@@ -77,6 +78,7 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
   const seat = KART_SEAT
 
   const flameRef = useRef<THREE.Mesh>(null)
+  const coreRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
   const sparksRef = useRef<THREE.Group>(null)
   const sparkMat = useMemo(
@@ -84,15 +86,77 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
     [],
   )
 
-  useFrame(() => {
+  // Drift-Rauch: Pool im Welt-Raum. Eigene Materialien (jeder Puff eigene Opacity),
+  // Zustand pro Puff wird wiederverwendet – kein Erzeugen pro Frame.
+  const smokeRef = useRef<THREE.Group>(null)
+  const smoke = useMemo(
+    () => Array.from({ length: SMOKE_COUNT }, () => ({ life: 0, max: 0.55, x: 0, z: 0, base: 0.3 })),
+    [],
+  )
+  const smokeMats = useMemo(
+    () =>
+      Array.from(
+        { length: SMOKE_COUNT },
+        () => new THREE.MeshBasicMaterial({ color: '#dcdcdc', transparent: true, opacity: 0, depthWrite: false }),
+      ),
+    [],
+  )
+  const smokeNext = useRef(0)
+  const smokeTimer = useRef(0)
+  const smokeSide = useRef(1)
+
+  useFrame((_, delta) => {
     const t = performance.now() * 0.001
-    // Boost-Flamme
+    // Boost-Flamme (größer + heller beim Boost)
     const boosting = kart.boostTime > 0
     if (flameRef.current) {
       flameRef.current.visible = boosting
       if (boosting) {
-        const pulse = 1.4 + Math.sin(t * 30) * 0.3
-        flameRef.current.scale.set(0.7, 0.7, pulse)
+        const pulse = 2.0 + Math.sin(t * 30) * 0.4
+        flameRef.current.scale.set(1.0, 1.0, pulse)
+      }
+    }
+    if (coreRef.current) {
+      coreRef.current.visible = boosting
+      if (boosting) {
+        const pulse = 1.6 + Math.sin(t * 38) * 0.4
+        coreRef.current.scale.set(0.9, 0.9, pulse)
+      }
+    }
+
+    // Drift-Rauch: hinter den Hinterrädern spawnen (Welt-Raum → zieht nach)
+    const grp = smokeRef.current
+    if (grp) {
+      const emit = (kart.drifting && Math.abs(kart.speed) > 6) || boosting
+      smokeTimer.current -= delta
+      if (emit && smokeTimer.current <= 0) {
+        smokeTimer.current = 0.045
+        const h = kart.heading
+        const fx = Math.sin(h)
+        const fz = Math.cos(h)
+        const back = 1.9 * KART_SCALE // hinter das Heck
+        const lat = 0.7 * smokeSide.current
+        smokeSide.current *= -1 // Puffs abwechselnd links/rechts
+        const p = smoke[smokeNext.current]
+        smokeNext.current = (smokeNext.current + 1) % SMOKE_COUNT
+        p.x = kart.x - fx * back + fz * lat
+        p.z = kart.z - fz * back - fx * lat
+        p.life = p.max
+        p.base = boosting ? 0.42 : 0.3
+      }
+      for (let i = 0; i < SMOKE_COUNT; i++) {
+        const p = smoke[i]
+        const m = grp.children[i] as THREE.Mesh
+        if (p.life > 0) {
+          p.life -= delta
+          const age = 1 - p.life / p.max // 0..1
+          m.visible = true
+          m.position.set(p.x, 0.3 + age * 0.9, p.z)
+          m.scale.setScalar(p.base * (0.5 + age * 1.7))
+          smokeMats[i].opacity = (1 - age) * 0.5
+        } else if (m.visible) {
+          m.visible = false
+        }
       }
     }
     // Unterboden-Glow (stärker beim Boost)
@@ -120,6 +184,7 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
 
   const seatPos: [number, number, number] = [0, seat.y * KART_SCALE, seat.z * KART_SCALE]
   return (
+    <>
     <group ref={ref}>
       <group>
         {/* Selbstgebautes Viper-Kart (orange/blau), Nase in Fahrtrichtung */}
@@ -148,10 +213,14 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
         <meshBasicMaterial color={color} transparent opacity={0.22} depthWrite={false} />
       </mesh>
 
-      {/* Boost-Flamme hinten */}
+      {/* Boost-Flamme hinten (Pet-Farbe) + weiß-heißer Innenkern */}
       <mesh ref={flameRef} position={[0, 0.4, -1.7]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
         <coneGeometry args={[0.32, 1.6, 12]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.5} transparent opacity={0.9} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={3} transparent opacity={0.9} />
+      </mesh>
+      <mesh ref={coreRef} position={[0, 0.4, -1.55]} rotation={[Math.PI / 2, 0, 0]} visible={false}>
+        <coneGeometry args={[0.17, 1.3, 10]} />
+        <meshStandardMaterial color="#fff4d6" emissive="#ffffff" emissiveIntensity={4} transparent opacity={0.95} />
       </mesh>
 
       {/* Drift-Funken hinten */}
@@ -163,6 +232,16 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
         ))}
       </group>
     </group>
+
+    {/* Drift-Rauch – eigene Gruppe im Welt-Raum (fährt NICHT mit dem Kart mit) */}
+    <group ref={smokeRef}>
+      {smoke.map((_, i) => (
+        <mesh key={i} material={smokeMats[i]} visible={false}>
+          <sphereGeometry args={[1, 6, 6]} />
+        </mesh>
+      ))}
+    </group>
+    </>
   )
 })
 

@@ -21,8 +21,14 @@ export function Hud() {
   const [confirmExit, setConfirmExit] = useState(false)
   const [soundOn, setSoundOn] = useState(sfx.isEnabled())
 
+  // Speed-Linien blenden ab ~55 km/h weich ein (Motor-Intensität endet bei ~82).
+  const speedOpacity = Math.max(0, Math.min(1, (speedKmh - 55) / 25))
+
   return (
     <div className="hud">
+      {countdown <= 0 && speedOpacity > 0 && (
+        <div className="speed-lines" style={{ opacity: speedOpacity * 0.9 }} />
+      )}
       <div className="hud-coins">🪙 {coins}</div>
 
       {countdown < 0 && <PreRaceDialog playerId={selectedPetId} />}
