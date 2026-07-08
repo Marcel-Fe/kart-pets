@@ -5,7 +5,7 @@ import type { Pet } from '../types'
 // Drehpunkt (transform-origin Y in %) fuer das Kopf-Nicken je Pet – aus pets-parts/meta.json.
 const NECK: Record<string, number> = {
   drako: 57.2, flami: 44.4, fynnox: 36.8, lupix: 55.3, neko: 66.9,
-  owlio: 63.1, pingu: 54.6, pompao: 53.2, zippo: 53.8,
+  owlio: 63.1, pingu: 54.6, pompao: 53.2, zippo: 55.0,
 }
 
 /**
