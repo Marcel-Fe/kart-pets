@@ -5,6 +5,7 @@ import { TRACKS } from '../data/tracks'
 import { DAILY_TASKS } from '../data/dailyTasks'
 import { StatBar } from '../ui/StatBar'
 import { PetAvatar } from '../ui/PetAvatar'
+import { PetPuppet } from '../ui/PetPuppet'
 import { asset } from '../utils/asset'
 import { levelFromXp, STAGE_EMOJI, playerLevelFromPoints } from '../data/progression'
 import type { Rarity, Screen } from '../types'
@@ -134,7 +135,7 @@ export function MainMenu() {
         <div className="hero-glow" style={{ background: `radial-gradient(circle at 50% 42%, ${selected.color}66, transparent 68%)` }} />
         <div className="hero-podest-disc" style={{ background: `radial-gradient(ellipse at 50% 50%, ${selected.color}aa, ${selected.color}22 70%, transparent)` }} />
         {selected.cutImage || selected.image ? (
-          <img className="hero-podest-img" src={asset((selected.cutImage ?? selected.image)!)} alt={selected.name} />
+          <PetPuppet pet={selected} className="hero-podest-puppet" />
         ) : (
           <span className="pet-hero-emoji">{selected.emoji}</span>
         )}

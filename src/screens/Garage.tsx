@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { StatBar } from '../ui/StatBar'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
+
+type UpgradeDef = (typeof UPGRADES)[number]
 
 const DEFAULT_KART = '/art/karts/viper01.png' // Starter-Kart für alle Pets ohne eigenes Kart-Bild
 
@@ -16,6 +19,9 @@ export function Garage() {
   const buyUpgrade = useGameStore((s) => s.buyUpgrade)
   const setScreen = useGameStore((s) => s.setScreen)
   const selectedPetId = useGameStore((s) => s.selectedPetId)
+
+  // Welches Upgrade gerade betrachtet wird -> hebt das Kart hervor.
+  const [focus, setFocus] = useState<UpgradeDef | null>(null)
 
   const pet = getPet(selectedPetId)
   const lv = {
@@ -47,25 +53,37 @@ export function Garage() {
       <h2 className="section-title">🔧 Kart-Garage</h2>
 
       {/* Kart-Held: echtes 3D-Modell (drehbar) falls vorhanden, sonst Render-Bild */}
-      <div className="garage-stage">
+      <div className={'garage-stage' + (focus ? ' has-focus' : '')}>
         <div
           className="garage-bg"
           style={{ backgroundImage: `url(${asset('/art/garage-bg.jpg')})` }}
         />
         <div
           className="garage-glow"
-          style={{ background: `radial-gradient(circle at 50% 44%, ${pet.color}55, transparent 66%)` }}
+          style={{ background: `radial-gradient(circle at 50% 62%, ${pet.color}44, transparent 60%)` }}
+        />
+        <div
+          className="garage-focus-glow"
+          style={focus ? { background: `radial-gradient(circle at 50% 60%, ${focus.color}66, transparent 62%)` } : undefined}
         />
         <div
           className="garage-disc"
-          style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}cc, ${pet.color}22 60%, transparent)` }}
+          style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}bb, ${pet.color}22 60%, transparent)` }}
         />
         {/* Jedes Pet zeigt ein echtes Kart (Standard: Viper 01), nicht mehr sein Porträt */}
         <img
-          className="garage-kart-img"
+          className={'garage-kart-img' + (focus ? ' kart-focus' : '')}
           src={asset(pet.kartImage ?? DEFAULT_KART)}
           alt={`${pet.name}s Kart`}
         />
+        {focus && (
+          <div className="kart-focus-tag" style={{ borderColor: focus.color }}>
+            <span className="kart-focus-emoji">{focus.emoji}</span>
+            {focus.name} <strong style={{ color: focus.color }}>{pctText(effectFor(focus.id, (upgrades[focus.id] ?? 0) + 1))}</strong>
+          </div>
+        )}
+        {/* „Licht geht an" – blendet beim Betreten einmalig auf */}
+        <div className="garage-lights" />
       </div>
       <div className="pet-card-name garage-kart-name">{pet.name}s Kart</div>
 
@@ -89,8 +107,11 @@ export function Garage() {
           return (
             <div
               key={def.id}
-              className="profile-card upgrade-card"
+              className={'profile-card upgrade-card' + (focus?.id === def.id ? ' upgrade-active' : '')}
               style={{ borderColor: `${def.color}99`, boxShadow: `0 0 26px ${def.color}33` }}
+              onPointerEnter={() => setFocus(def)}
+              onPointerLeave={() => setFocus((f) => (f?.id === def.id ? null : f))}
+              onTouchStart={() => setFocus(def)}
             >
               <div className="upgrade-head">
                 <span className="upgrade-emoji" style={{ background: `${def.color}33` }}>
