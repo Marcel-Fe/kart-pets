@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { RoundedBox, Float } from '@react-three/drei'
 import { TrackCurve } from './trackCurve'
 import type { TrackTheme } from '../data/tracks'
+import { ROAD_WIDTH } from '../data/tracks'
 import { makeGroundTexture, makeRoadTexture, makeKerbTexture } from './textures'
 
 interface Props {
@@ -380,6 +381,10 @@ export function Track({ curve, theme }: Props) {
   const road = useMemo(() => curve.buildRoadGeometry(), [curve])
   const borderL = useMemo(() => curve.buildBorderGeometry(1), [curve])
   const borderR = useMemo(() => curve.buildBorderGeometry(-1), [curve])
+  // Durchgehende weiße Fahrbahnlinien knapp innerhalb der Randsteine.
+  const edge = ROAD_WIDTH / 2 - 0.55
+  const lineL = useMemo(() => curve.buildLineGeometry(edge), [curve, edge])
+  const lineR = useMemo(() => curve.buildLineGeometry(-edge), [curve, edge])
   const scatter = useScatter(curve)
   const sway = useWind()
   // Straßenrand-Details entlang der Strecke (nur Dorf/Wald – passt zur Design-Bibel).
@@ -444,7 +449,7 @@ export function Track({ curve, theme }: Props) {
         [-180, -40], [160, 120], [60, -200], [-120, 180], [210, -120],
       ].map((h, i) => (
         <mesh key={i} position={[h[0], -6, h[1]]} scale={[40, 22, 40]} receiveShadow>
-          <sphereGeometry args={[1, 24, 16]} />
+          <sphereGeometry args={[1, 48, 32]} />
           <meshStandardMaterial color={hillColor} roughness={1} />
         </mesh>
       ))}
@@ -461,11 +466,19 @@ export function Track({ curve, theme }: Props) {
         <meshStandardMaterial map={kerbTex} roughness={0.6} />
       </mesh>
 
-      {/* Mittellinien-Striche */}
+      {/* Durchgehende weiße Randlinien der Fahrbahn */}
+      <mesh geometry={lineL}>
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} roughness={0.5} />
+      </mesh>
+      <mesh geometry={lineR}>
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Weiße Mittellinien-Striche */}
       {dashes.map((d, i) => (
         <mesh key={i} position={[d.x, 0.04, d.z]} rotation={[-Math.PI / 2, 0, -d.rot]}>
-          <planeGeometry args={[0.5, 2.2]} />
-          <meshStandardMaterial color="#fde9a0" emissive="#fde9a0" emissiveIntensity={0.4} />
+          <planeGeometry args={[0.4, 2.4]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.35} />
         </mesh>
       ))}
 

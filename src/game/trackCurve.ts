@@ -98,6 +98,34 @@ export class TrackCurve {
     return geo
   }
 
+  // Durchgehende Fahrbahn-Linie bei seitlichem Versatz `offset` (weiße Markierung).
+  buildLineGeometry(offset: number, width = 0.4): THREE.BufferGeometry {
+    const n = this.samples.length
+    const positions: number[] = []
+    const indices: number[] = []
+    for (let i = 0; i <= n; i++) {
+      const idx = i % n
+      const p = this.samples[idx]
+      const nor = this.normals[idx]
+      const a = offset - width / 2
+      const b = offset + width / 2
+      positions.push(p.x + nor.x * a, 0.035, p.z + nor.z * a)
+      positions.push(p.x + nor.x * b, 0.035, p.z + nor.z * b)
+    }
+    for (let i = 0; i < n; i++) {
+      const a = i * 2
+      const b = i * 2 + 1
+      const c = i * 2 + 2
+      const d = i * 2 + 3
+      indices.push(a, b, c, b, d, c)
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geo.setIndex(indices)
+    geo.computeVertexNormals()
+    return geo
+  }
+
   // Schmale Randstreifen (links/rechts) für den klaren Cartoon-Look.
   buildBorderGeometry(side: 1 | -1): THREE.BufferGeometry {
     const half = ROAD_WIDTH / 2

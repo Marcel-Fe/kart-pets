@@ -65,27 +65,43 @@ function canvas(size: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   return [c, c.getContext('2d')!]
 }
 
-// Gras mit weichen Flecken für einen lebendigen, weniger flachen Boden.
+// Gras: hochauflösend + feine Grashalme, damit der Boden nicht verpixelt wirkt.
 export function makeGrassTexture(): THREE.Texture {
-  const [c, ctx] = canvas(512)
-  ctx.fillStyle = '#2f8f4e'
-  ctx.fillRect(0, 0, 512, 512)
-  const shades = ['#2a8147', '#359b56', '#287a42', '#3aa75e', '#256e3b']
-  for (let i = 0; i < 1400; i++) {
+  const S = 1024
+  const [c, ctx] = canvas(S)
+  const base = ctx.createLinearGradient(0, 0, S, S)
+  base.addColorStop(0, '#2f8f4e')
+  base.addColorStop(1, '#288045')
+  ctx.fillStyle = base
+  ctx.fillRect(0, 0, S, S)
+  // weiche Farbflecken für Tiefe
+  const shades = ['#2a8147', '#359b56', '#287a42', '#3aa75e', '#256e3b', '#3fb267']
+  for (let i = 0; i < 2600; i++) {
     ctx.fillStyle = shades[i % shades.length]
-    const x = Math.random() * 512
-    const y = Math.random() * 512
-    const r = 2 + Math.random() * 7
+    ctx.globalAlpha = 0.35
+    ctx.beginPath()
+    ctx.arc(Math.random() * S, Math.random() * S, 3 + Math.random() * 12, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // feine Grashalme (kurze Striche) → weniger „glatt/verpixelt"
+  ctx.lineWidth = 1.2
+  for (let i = 0; i < 3200; i++) {
+    const x = Math.random() * S
+    const y = Math.random() * S
+    ctx.strokeStyle = shades[(i + 2) % shades.length]
     ctx.globalAlpha = 0.5
     ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + (Math.random() - 0.5) * 4, y - 4 - Math.random() * 5)
+    ctx.stroke()
   }
   ctx.globalAlpha = 1
   const tex = new THREE.CanvasTexture(c)
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-  tex.repeat.set(60, 60)
+  tex.repeat.set(48, 48)
   tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8 // scharf bis zum Horizont (behebt „verpixelt")
+  tex.generateMipmaps = true
   return tex
 }
 
@@ -179,6 +195,7 @@ export function makeRoadTexture(): THREE.Texture {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
   tex.repeat.set(2, 40)
   tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
   return tex
 }
 
@@ -193,5 +210,6 @@ export function makeKerbTexture(): THREE.Texture {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
   tex.repeat.set(1, 60)
   tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
   return tex
 }
