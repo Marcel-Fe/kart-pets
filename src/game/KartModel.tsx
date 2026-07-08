@@ -4,6 +4,7 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useLoader } from '@react-three/fiber'
 import { PETS } from '../data/pets'
 import { PetFigure } from './PetFigure'
+import { ViperKart, KART_SEAT } from './ViperKart'
 import { asset } from '../utils/asset'
 import type { KartState } from './raceSim'
 import type { EarType } from '../types'
@@ -69,29 +70,11 @@ function RacePet({ url, rot }: { url: string; rot?: [number, number, number] }) 
 
 // Lädt ein echtes GLB-Kart-Modell (Kenney Car Kit, CC0) und ergänzt
 // Effekte: Boost-Flamme, Drift-Funken, Unterboden-Glow in Pet-Farbe.
-export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType, cutImage, raceImage, model3d, model3dRot, kart }, ref) => {
+export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutImage, raceImage, model3d, model3dRot, kart }, ref) => {
   // Priorität fürs Rennen: Rück-Sprite (bester Look, von hinten) > 3D-GLB > Frontal-Sprite.
   const spriteUrl = raceImage ?? (model3d ? undefined : cutImage)
-  const { scene } = useGLTF(asset(path))
-  const { model, seat } = useMemo(() => {
-    const clone = scene.clone(true)
-    clone.updateMatrixWorld(true)
-    // Generische Kenney-Figur ausblenden, Sitzposition merken
-    const char = clone.getObjectByName('character')
-    const seat = new THREE.Vector3(0, 0.55, -0.05)
-    if (char) {
-      char.getWorldPosition(seat)
-      char.visible = false
-    }
-    clone.traverse((o) => {
-      const m = o as THREE.Mesh
-      if (m.isMesh) {
-        m.castShadow = true
-        m.receiveShadow = true
-      }
-    })
-    return { model: clone, seat }
-  }, [scene])
+  const KART_SCALE = 1.15
+  const seat = KART_SEAT
 
   const flameRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
@@ -135,38 +118,27 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType,
     }
   })
 
+  const seatPos: [number, number, number] = [0, seat.y * KART_SCALE, seat.z * KART_SCALE]
   return (
     <group ref={ref}>
       <group>
+        {/* Selbstgebautes Viper-Kart (orange/blau), Nase in Fahrtrichtung */}
+        <group scale={KART_SCALE}>
+          <ViperKart accent={color} />
+        </group>
         {spriteUrl ? (
-          <>
-            {/* Echtes 3D-Kart von hinten … */}
-            <primitive object={model} scale={2.4} rotation={[0, 0, 0]} position={[0, 0, 0]} />
-            {/* … mit dem Pet als Rück-Sprite auf dem Sitz (sitzt im Kart, von hinten sichtbar) */}
-            <group position={[0, seat.y * 2.4, seat.z * 2.4]}>
-              <RaceCharSprite url={spriteUrl} height={2.5} y={1.05} />
-            </group>
-          </>
+          // Pet als Rück-Sprite auf dem Sitz (von hinten sichtbar)
+          <group position={seatPos}>
+            <RaceCharSprite url={spriteUrl} height={2.4} y={1.0} />
+          </group>
         ) : model3d ? (
-          <>
-            {/* Echtes 3D-Pet auf dem Kenney-Kart – von hinten sichtbar */}
-            <primitive object={model} scale={2.4} rotation={[0, 0, 0]} position={[0, 0, 0]} />
-            <group scale={2.4}>
-              <group position={[seat.x, seat.y + 0.08, seat.z]}>
-                <RacePet url={model3d} rot={model3dRot} />
-              </group>
-            </group>
-          </>
+          <group position={seatPos} scale={1.8}>
+            <RacePet url={model3d} rot={model3dRot} />
+          </group>
         ) : (
-          <>
-            {/* Fallback: Low-Poly-Modell blickt nach +Z (= Fahrtrichtung) */}
-            <primitive object={model} scale={2.4} rotation={[0, 0, 0]} position={[0, 0, 0]} />
-            <group scale={2.4}>
-              <group position={[seat.x, seat.y + 0.08, seat.z]} scale={0.9}>
-                <PetFigure earType={earType} color={color} />
-              </group>
-            </group>
-          </>
+          <group position={seatPos} scale={1.6}>
+            <PetFigure earType={earType} color={color} />
+          </group>
         )}
       </group>
 
@@ -196,9 +168,7 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ path, color, earType,
 
 KartModel.displayName = 'KartModel'
 
-// Alle Kart-Modelle (und vorhandene Pet-3D-Modelle) vorab laden (kein Ruckler beim Rennstart).
+// Vorhandene Pet-3D-Modelle vorab laden (Kart ist jetzt selbstgebaut, kein GLB nötig).
 PETS.forEach((p) => {
-  useGLTF.preload(asset(p.model))
-  // Pet-GLB nur vorladen, wenn es im Rennen auch genutzt wird (kein Rück-Sprite vorhanden).
   if (p.model3d && !p.raceImage) useGLTF.preload(asset(p.model3d))
 })

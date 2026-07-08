@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useHudStore } from '../store/hudStore'
 import { useGameStore } from '../store/gameStore'
 import { sfx } from '../audio/sfx'
+import { getPet } from '../data/pets'
+import { asset } from '../utils/asset'
+import { rivalId } from '../data/cup'
 
 export function Hud() {
   const position = useHudStore((s) => s.position)
@@ -13,6 +16,7 @@ export function Hud() {
   const speedKmh = useHudStore((s) => s.speedKmh)
   const coins = useHudStore((s) => s.coins)
   const setScreen = useGameStore((s) => s.setScreen)
+  const selectedPetId = useGameStore((s) => s.selectedPetId)
 
   const [confirmExit, setConfirmExit] = useState(false)
   const [soundOn, setSoundOn] = useState(sfx.isEnabled())
@@ -20,6 +24,8 @@ export function Hud() {
   return (
     <div className="hud">
       <div className="hud-coins">🪙 {coins}</div>
+
+      {countdown < 0 && <PreRaceDialog playerId={selectedPetId} />}
 
       <button
         className="hud-sound"
@@ -89,4 +95,41 @@ export function Hud() {
 // „GO!" kurz einblenden, sobald der Countdown 0 erreicht.
 function CountdownGo() {
   return <div className="countdown go">GO!</div>
+}
+
+const PLAYER_LINES = [
+  'Auf geht\'s – der Pokal wird meiner! 🔥',
+  'Zeigen wir allen, was wir draufhaben! 💪',
+  'Heute überhole ich sie alle! 🏁',
+  'Festhalten – jetzt wird gefahren! ⚡',
+]
+const RIVAL_LINES = [
+  'Ha! Du gegen MICH? Süß. 😏',
+  'Bleib hinten, wo du hingehörst! 😈',
+  'Der Sieg gehört längst mir! 🏆',
+  'Träum weiter, Neuling. 🐲',
+]
+
+// Vor dem Start: Held motiviert sich, der Rivale stichelt – mit Gesicht & Emotion.
+function PreRaceDialog({ playerId }: { playerId: string }) {
+  const player = getPet(playerId)
+  const rival = getPet(rivalId(playerId))
+  const [lines] = useState(() => ({
+    p: PLAYER_LINES[Math.floor(Math.random() * PLAYER_LINES.length)],
+    r: RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)],
+  }))
+  const pFace = player.cutImage ?? player.image
+  const rFace = rival.cutImage ?? rival.image
+  return (
+    <div className="prerace">
+      <div className="prerace-actor left">
+        <div className="prerace-bubble">{lines.p}</div>
+        {pFace && <img className="prerace-face" src={asset(pFace)} alt={player.name} />}
+      </div>
+      <div className="prerace-actor right">
+        <div className="prerace-bubble rival">{lines.r}</div>
+        {rFace && <img className="prerace-face rival" src={asset(rFace)} alt={rival.name} />}
+      </div>
+    </div>
+  )
 }
