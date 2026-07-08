@@ -1,7 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { getPet } from '../data/pets'
 import { StatBar } from '../ui/StatBar'
-import { asset } from '../utils/asset'
+import { PetPuppet } from '../ui/PetPuppet'
 import { levelFromXp, STAGE_EMOJI, type Stage } from '../data/progression'
 import type { Rarity } from '../types'
 
@@ -37,7 +37,7 @@ export function PetProfile() {
 
       <div className="profile-hero" style={{ background: `radial-gradient(circle, ${pet.color}44, transparent 70%)` }}>
         {pet.cutImage || pet.image ? (
-          <img className="profile-hero-img" src={asset((pet.cutImage ?? pet.image)!)} alt={pet.name} />
+          <PetPuppet pet={pet} className="profile-hero-puppet" />
         ) : (
           <span className="profile-emoji">{pet.emoji}</span>
         )}

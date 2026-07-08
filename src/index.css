@@ -1898,6 +1898,12 @@ body::before {
   margin: 0 auto;
   filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.5));
 }
+/* Lebendige Marionette im Pet-Profil */
+.profile-hero-puppet {
+  height: 176px;
+  max-width: 82%;
+  margin: 0 auto 2px;
+}
 
 /* =====================================================================
    STRECKEN-AUSWAHL (Schritt 5) — Vollbild-Screen mit großen Welt-Karten
