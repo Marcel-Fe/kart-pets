@@ -1,0 +1,227 @@
+// Prozedurale Soundeffekte per Web Audio API – keine Audio-Dateien, kein Login.
+// Alles wird zur Laufzeit synthetisiert (Motor, Münze, Boost, Drift, Countdown, Ziel).
+
+const STORAGE_KEY = 'kart-pets-sound'
+
+let ctx: AudioContext | null = null
+let master: GainNode | null = null
+let enabled = true
+let noiseBuf: AudioBuffer | null = null
+
+// Motor-Knoten (dauerhaft während des Rennens)
+let engine: { osc: OscillatorNode; sub: OscillatorNode; filter: BiquadFilterNode; gain: GainNode } | null = null
+// Drift-Rausch (dauerhaft während des Driftens)
+let drift: { src: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode } | null = null
+
+function loadEnabled(): boolean {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY)
+    return v === null ? true : v === '1'
+  } catch {
+    return true
+  }
+}
+enabled = loadEnabled()
+
+function ensure(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  try {
+    if (!ctx) {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      ctx = new AC()
+      master = ctx.createGain()
+      master.gain.value = enabled ? 0.9 : 0
+      master.connect(ctx.destination)
+    }
+    if (ctx.state === 'suspended') void ctx.resume()
+    return ctx
+  } catch {
+    return null
+  }
+}
+
+function noise(c: AudioContext): AudioBuffer {
+  if (noiseBuf) return noiseBuf
+  const len = c.sampleRate * 2
+  const buf = c.createBuffer(1, len, c.sampleRate)
+  const d = buf.getChannelData(0)
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+  noiseBuf = buf
+  return buf
+}
+
+// Kurzer Ton mit Hüllkurve.
+function blip(freq: number, dur: number, type: OscillatorType, vol: number, glideTo?: number) {
+  const c = ensure()
+  if (!c || !master) return
+  const t = c.currentTime
+  const osc = c.createOscillator()
+  const g = c.createGain()
+  osc.type = type
+  osc.frequency.setValueAtTime(freq, t)
+  if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t + dur)
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.008)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+  osc.connect(g).connect(master)
+  osc.start(t)
+  osc.stop(t + dur + 0.02)
+}
+
+export const sfx = {
+  isEnabled: () => enabled,
+
+  // Muss nach einer Nutzer-Geste laufen (Autoplay-Policy).
+  resume() {
+    ensure()
+  },
+
+  setEnabled(on: boolean) {
+    enabled = on
+    try {
+      localStorage.setItem(STORAGE_KEY, on ? '1' : '0')
+    } catch {
+      /* ignore */
+    }
+    const c = ensure()
+    if (master && c) master.gain.setTargetAtTime(on ? 0.9 : 0, c.currentTime, 0.02)
+    if (!on) {
+      this.stopEngine()
+      this.driftStop()
+    }
+  },
+
+  toggle() {
+    this.setEnabled(!enabled)
+    return enabled
+  },
+
+  // --- Motor: dauerhafter Klang, Tonhöhe/Helligkeit steigt mit Tempo (0..1) ---
+  startEngine() {
+    const c = ensure()
+    if (!c || !master || engine) return
+    const osc = c.createOscillator()
+    const sub = c.createOscillator()
+    const filter = c.createBiquadFilter()
+    const gain = c.createGain()
+    osc.type = 'sawtooth'
+    sub.type = 'square'
+    filter.type = 'lowpass'
+    filter.frequency.value = 500
+    osc.frequency.value = 60
+    sub.frequency.value = 30
+    gain.gain.value = 0.0
+    osc.connect(filter)
+    sub.connect(filter)
+    filter.connect(gain).connect(master)
+    osc.start()
+    sub.start()
+    engine = { osc, sub, filter, gain }
+  },
+
+  engineIntensity(v: number) {
+    const c = ctx
+    if (!engine || !c) return
+    const x = Math.max(0, Math.min(1, v))
+    const base = 55 + x * 150
+    const now = c.currentTime
+    engine.osc.frequency.setTargetAtTime(base, now, 0.08)
+    engine.sub.frequency.setTargetAtTime(base * 0.5, now, 0.08)
+    engine.filter.frequency.setTargetAtTime(400 + x * 2600, now, 0.08)
+    engine.gain.gain.setTargetAtTime(0.04 + x * 0.05, now, 0.1)
+  },
+
+  stopEngine() {
+    if (!engine) return
+    const e = engine
+    engine = null
+    try {
+      const c = ctx!
+      e.gain.gain.setTargetAtTime(0, c.currentTime, 0.05)
+      e.osc.stop(c.currentTime + 0.2)
+      e.sub.stop(c.currentTime + 0.2)
+    } catch {
+      /* ignore */
+    }
+  },
+
+  // --- Münze: heller Zwei-Ton-Ping (Arcade) ---
+  coin() {
+    blip(880, 0.09, 'square', 0.14)
+    window.setTimeout(() => blip(1320, 0.12, 'square', 0.14), 60)
+  },
+
+  // --- Boost: aufsteigendes Whoosh + Ton ---
+  boost() {
+    const c = ensure()
+    if (!c || !master) return
+    const t = c.currentTime
+    const src = c.createBufferSource()
+    src.buffer = noise(c)
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.setValueAtTime(400, t)
+    bp.frequency.exponentialRampToValueAtTime(3200, t + 0.4)
+    bp.Q.value = 0.8
+    const g = c.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.05)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
+    src.connect(bp).connect(g).connect(master)
+    src.start(t)
+    src.stop(t + 0.55)
+    blip(220, 0.45, 'sawtooth', 0.12, 660)
+  },
+
+  // --- Drift: dauerhaftes Reifen-Quietschen ---
+  driftStart() {
+    const c = ensure()
+    if (!c || !master || drift) return
+    const src = c.createBufferSource()
+    src.buffer = noise(c)
+    src.loop = true
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 1800
+    bp.Q.value = 6
+    const g = c.createGain()
+    g.gain.value = 0
+    src.connect(bp).connect(g).connect(master)
+    src.start()
+    g.gain.setTargetAtTime(0.06, c.currentTime, 0.05)
+    drift = { src, filter: bp, gain: g }
+  },
+
+  driftStop() {
+    if (!drift) return
+    const d = drift
+    drift = null
+    try {
+      const c = ctx!
+      d.gain.gain.setTargetAtTime(0, c.currentTime, 0.05)
+      d.src.stop(c.currentTime + 0.2)
+    } catch {
+      /* ignore */
+    }
+  },
+
+  // --- Countdown-Piepser (go = heller Startton) ---
+  beep(go = false) {
+    if (go) {
+      blip(880, 0.35, 'square', 0.2, 1200)
+    } else {
+      blip(560, 0.16, 'square', 0.16)
+    }
+  },
+
+  // --- Ziel-Fanfare (kleiner Arpeggio-Jubel) ---
+  finish() {
+    const notes = [523, 659, 784, 1047]
+    notes.forEach((f, i) => window.setTimeout(() => blip(f, 0.22, 'square', 0.16), i * 110))
+  },
+
+  // --- UI-Klick ---
+  click() {
+    blip(320, 0.05, 'square', 0.08)
+  },
+}

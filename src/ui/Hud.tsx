@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useHudStore } from '../store/hudStore'
 import { useGameStore } from '../store/gameStore'
+import { sfx } from '../audio/sfx'
 
 export function Hud() {
   const position = useHudStore((s) => s.position)
@@ -14,10 +15,19 @@ export function Hud() {
   const setScreen = useGameStore((s) => s.setScreen)
 
   const [confirmExit, setConfirmExit] = useState(false)
+  const [soundOn, setSoundOn] = useState(sfx.isEnabled())
 
   return (
     <div className="hud">
       <div className="hud-coins">🪙 {coins}</div>
+
+      <button
+        className="hud-sound"
+        onClick={() => setSoundOn(sfx.toggle())}
+        aria-label={soundOn ? 'Ton aus' : 'Ton an'}
+      >
+        {soundOn ? '🔊' : '🔇'}
+      </button>
       <div className="hud-top">
         <div className={'hud-chip rank-' + position}>
           <span className="hud-label">PLATZ</span>

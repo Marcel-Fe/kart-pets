@@ -1,4 +1,4 @@
-import { useMemo, useRef, Suspense } from 'react'
+import { useEffect, useMemo, useRef, Suspense } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Sky, Environment, Stars } from '@react-three/drei'
@@ -8,6 +8,7 @@ import { Track } from './Track'
 import { KartModel } from './KartModel'
 import { controls } from './controls'
 import { useHudStore } from '../store/hudStore'
+import { sfx } from '../audio/sfx'
 import { AI_STYLES } from '../data/pets'
 import type { Pet, RaceResult, RaceResultEntry } from '../types'
 import type { TrackDef } from '../data/tracks'
@@ -113,6 +114,20 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const camInit = useRef(false)
   const setHud = useHudStore((s) => s.set)
 
+  // --- Sound-Zustand (Flanken-Erkennung) ---
+  const sndBeep = useRef(4) // zuletzt gepiepste Countdown-Zahl (4 = noch nichts)
+  const sndDrift = useRef(false)
+  const sndBoost = useRef(false)
+  const engineOn = useRef(false)
+
+  useEffect(() => {
+    sfx.resume() // Rennstart kam per Tap (Nutzer-Geste) -> Audio darf starten
+    return () => {
+      sfx.stopEngine()
+      sfx.driftStop()
+    }
+  }, [])
+
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05)
     const player = karts[0]
@@ -122,6 +137,23 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
     if (introing) intro.current -= dt
     else countdown.current -= dt
     const racing = !introing && countdown.current <= 0
+
+    // Motor läuft ab Ende des Intros (Leerlauf im Countdown, dreht dann hoch)
+    if (!introing && !engineOn.current) {
+      sfx.startEngine()
+      engineOn.current = true
+    }
+    // Countdown-Piepser 3-2-1 + „GO!"
+    if (!introing) {
+      const cInt = Math.ceil(countdown.current)
+      if (countdown.current > 0 && cInt < sndBeep.current && cInt >= 1 && cInt <= 3) {
+        sfx.beep(false)
+        sndBeep.current = cInt
+      } else if (countdown.current <= 0 && sndBeep.current > 0) {
+        sfx.beep(true)
+        sndBeep.current = 0
+      }
+    }
 
     if (racing) {
       // Spieler
@@ -163,11 +195,21 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         if (dx * dx + dz * dz < 9) {
           cs.got = true
           coinsGot.current += 1
+          sfx.coin()
           const mesh = coinRefs.current[i]
           if (mesh) mesh.visible = false
         }
       }
     }
+
+    // --- Sound: Motor-Tempo, Boost, Drift ---
+    sfx.engineIntensity(introing ? 0 : Math.min(1, speedKmh(player) / 82))
+    const boosting = player.boostTime > 0
+    if (boosting && !sndBoost.current) sfx.boost()
+    sndBoost.current = boosting
+    if (player.drifting && !sndDrift.current) sfx.driftStart()
+    else if (!player.drifting && sndDrift.current) sfx.driftStop()
+    sndDrift.current = player.drifting
 
     // Münzen drehen
     for (let i = 0; i < coins.length; i++) {
@@ -236,6 +278,10 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
     // Ziel
     if (player.finished && !reported.current) {
       reported.current = true
+      sfx.driftStop()
+      sfx.stopEngine()
+      engineOn.current = false
+      sfx.finish()
       const entries: RaceResultEntry[] = [...karts]
         .sort((a, b) => a.rank - b.rank)
         .map((k) => ({

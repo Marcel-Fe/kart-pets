@@ -489,6 +489,24 @@ body {
 .hud-exit:active {
   transform: scale(0.94);
 }
+.hud-sound {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 62px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(10, 16, 48, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--text);
+  font-size: 17px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 6;
+}
+.hud-sound:active {
+  transform: scale(0.94);
+}
 
 /* Verlassen-Bestätigung */
 .race-pause {
