@@ -422,16 +422,19 @@ body {
   gap: 8px;
 }
 .hud-chip {
-  background: rgba(10, 16, 48, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(30, 40, 100, 0.82), rgba(13, 18, 48, 0.82));
+  border: 1px solid rgba(150, 175, 255, 0.28);
+  border-radius: 14px;
+  padding: 5px 13px 7px;
   text-align: center;
-  min-width: 58px;
+  min-width: 60px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(4px);
 }
 .hud-label {
   display: block;
   font-size: 10px;
+  font-weight: 800;
   color: var(--muted);
   letter-spacing: 1px;
 }
@@ -445,6 +448,11 @@ body {
   font-size: 13px;
   color: var(--muted);
 }
+/* Platz-Chip faerbt sich nach Rang (Gold/Silber/Bronze) */
+.hud-chip.rank-1 { border-color: rgba(255, 205, 70, 0.65); box-shadow: 0 4px 14px rgba(255, 170, 40, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+.hud-chip.rank-1 .hud-value { color: #ffd24a; text-shadow: 0 0 10px rgba(255, 190, 60, 0.7); }
+.hud-chip.rank-2 .hud-value { color: #dfe7f5; }
+.hud-chip.rank-3 .hud-value { color: #ff9d5c; }
 .hud-coins {
   position: absolute;
   top: calc(108px + env(safe-area-inset-top));
@@ -524,25 +532,32 @@ body {
 }
 .hud-boost-label {
   font-size: 11px;
+  font-weight: 800;
   color: var(--muted);
   text-align: right;
   letter-spacing: 1px;
 }
 .hud-boost-bar {
-  height: 12px;
-  background: rgba(10, 16, 48, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  height: 14px;
+  background: linear-gradient(180deg, rgba(13, 18, 48, 0.82), rgba(8, 12, 34, 0.82));
+  border: 1px solid rgba(150, 175, 255, 0.28);
   border-radius: 999px;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .hud-boost-fill {
   height: 100%;
-  background: #5b6cff;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4b5bff, #7b6cff);
   transition: width 0.1s linear;
 }
 .hud-boost-fill.ready {
   background: linear-gradient(90deg, #ffd23f, #ff7a2f);
-  box-shadow: 0 0 12px #ffae3f;
+  animation: boost-ready 0.7s ease-in-out infinite;
+}
+@keyframes boost-ready {
+  0%, 100% { box-shadow: 0 0 10px #ffae3f; }
+  50% { box-shadow: 0 0 20px #ffd23f, 0 0 6px #fff inset; }
 }
 .countdown {
   position: absolute;
@@ -604,38 +619,54 @@ body {
   font-weight: 900;
   color: #fff;
   font-size: 18px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   touch-action: none;
   user-select: none;
+  transition: transform 0.05s ease, filter 0.05s ease;
 }
 .tc-btn:active {
-  filter: brightness(1.3);
+  filter: brightness(1.22);
+  transform: translateY(3px);
 }
 .tc-btn.steer {
   width: 82px;
   height: 82px;
   font-size: 30px;
-  background: rgba(40, 50, 110, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, rgba(58, 70, 140, 0.92), rgba(34, 42, 96, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.tc-btn.steer:active {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .tc-btn.gas {
   width: 104px;
   height: 104px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #6bff9d, #1faa54);
-  box-shadow: 0 0 22px rgba(54, 224, 122, 0.6);
+  font-size: 20px;
+  background: radial-gradient(circle at 35% 28%, #7dffab, #1faa54 78%);
+  box-shadow: 0 7px 0 #15833e, 0 0 24px rgba(54, 224, 122, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+.tc-btn.gas:active {
+  box-shadow: 0 3px 0 #15833e, 0 0 24px rgba(54, 224, 122, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.3);
 }
 .tc-btn.drift {
   width: 86px;
   height: 56px;
-  background: linear-gradient(180deg, #ffb43f, #ff7a2f);
+  background: linear-gradient(180deg, #ffc23f, #ff7a1f);
+  box-shadow: 0 5px 0 #b85c10, inset 0 1px 0 rgba(255, 255, 255, 0.3);
   font-size: 15px;
 }
+.tc-btn.drift:active { box-shadow: 0 2px 0 #b85c10, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 .tc-btn.boost {
   width: 86px;
   height: 56px;
-  background: linear-gradient(180deg, #8a6bff, #5b3fff);
+  background: linear-gradient(180deg, #9a7bff, #5b3fff);
+  box-shadow: 0 5px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3);
   font-size: 15px;
 }
+.tc-btn.boost:active { box-shadow: 0 2px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 
 /* ---------- Result ---------- */
 .result {

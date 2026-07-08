@@ -19,7 +19,7 @@ export function Hud() {
     <div className="hud">
       <div className="hud-coins">🪙 {coins}</div>
       <div className="hud-top">
-        <div className="hud-chip">
+        <div className={'hud-chip rank-' + position}>
           <span className="hud-label">PLATZ</span>
           <span className="hud-value">
             {position}<small>/{totalRacers}</small>
