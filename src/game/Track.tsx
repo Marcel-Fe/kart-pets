@@ -18,9 +18,12 @@ function useWind(): SwayFn {
   const reg = useRef(new Map<string, { o: THREE.Object3D; ph: number; amp: number }>())
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
-    const gust = 0.72 + 0.28 * Math.sin(t * 0.37)
+    // Böen: langsame Grundschwankung + gelegentliche stärkere Windstöße
+    const gust = 0.75 + 0.35 * Math.sin(t * 0.4) + 0.2 * Math.sin(t * 0.13 + 1)
     reg.current.forEach((s) => {
-      s.o.rotation.z = Math.sin(t * 1.5 + s.ph) * s.amp * gust
+      // zwei Frequenzen überlagert -> natürlicheres Wiegen (Wippen + Flattern)
+      const sway = Math.sin(t * 1.5 + s.ph) * 0.82 + Math.sin(t * 3.3 + s.ph * 1.7) * 0.18
+      s.o.rotation.z = sway * s.amp * gust
     })
   })
   return (o, ph, amp) => {
@@ -42,7 +45,7 @@ function useScatter(curve: TrackCurve): Deco[] {
     const n = curve.samples.length
     // Gestaffelte Bänder je Streckenseite → dichte Kulisse. Fernstes Band bewusst
     // ausgedünnt (Nebel verdeckt die Ferne) für flüssige Bildrate auf dem Handy.
-    const bands = [9, 16, 24]
+    const bands = [11, 17, 25]
     for (let i = 0; i < n; i += 3) {
       const p = curve.samples[i]
       const nor = curve.normals[i]
@@ -84,7 +87,7 @@ function DecoItem({ d, decor, sway }: { d: Deco; decor: string; sway: SwayFn }) 
     if (d.variant === 0)
       // hohe, volle Tanne (4 Kegel-Schichten) – wiegt sich im Wind
       return (
-        <group ref={(o) => sway(o, ph, 0.045)} position={[d.x, 0, d.z]} scale={d.s} rotation={[0, d.rot, 0]}>
+        <group ref={(o) => sway(o, ph, 0.06)} position={[d.x, 0, d.z]} scale={d.s} rotation={[0, d.rot, 0]}>
           <mesh position={[0, 1.1, 0]} castShadow>
             <cylinderGeometry args={[0.3, 0.42, 2.2, 7]} />
             <meshStandardMaterial color="#5e4128" />
@@ -106,7 +109,7 @@ function DecoItem({ d, decor, sway }: { d: Deco; decor: string; sway: SwayFn }) 
     if (d.variant === 1)
       // runder Laubbaum (Stamm + büschelige Krone) – wiegt sich im Wind
       return (
-        <group ref={(o) => sway(o, ph, 0.055)} position={[d.x, 0, d.z]} scale={d.s}>
+        <group ref={(o) => sway(o, ph, 0.08)} position={[d.x, 0, d.z]} scale={d.s}>
           <mesh position={[0, 1.0, 0]} castShadow>
             <cylinderGeometry args={[0.26, 0.36, 2.0, 7]} />
             <meshStandardMaterial color="#6b4a2b" />
@@ -128,7 +131,7 @@ function DecoItem({ d, decor, sway }: { d: Deco; decor: string; sway: SwayFn }) 
     // niedriger Busch (Bodenbewuchs) – nur an jedem 2. steht ein Fliegenpilz
     const withMushroom = Math.abs(Math.round(d.x + d.z)) % 2 === 0
     return (
-      <group ref={(o) => sway(o, ph, 0.05)} position={[d.x, 0, d.z]} scale={d.s}>
+      <group ref={(o) => sway(o, ph, 0.07)} position={[d.x, 0, d.z]} scale={d.s}>
         <mesh position={[0, 0.5, 0]} castShadow>
           <sphereGeometry args={[0.7, 10, 8]} />
           <meshStandardMaterial color={g} roughness={1} />
@@ -359,7 +362,7 @@ function RoadsideProp({ p, sway }: { p: PropDef; sway: SwayFn }) {
       )
     default: // Blumenbüschel (wiegt sich im Wind)
       return (
-        <group ref={(o) => sway(o, ph, 0.08)} position={[p.x, 0, p.z]}>
+        <group ref={(o) => sway(o, ph, 0.11)} position={[p.x, 0, p.z]}>
           <mesh position={[0, 0.18, 0]} castShadow>
             <sphereGeometry args={[0.4, 10, 8]} />
             <meshStandardMaterial color="#2f8f45" roughness={1} />

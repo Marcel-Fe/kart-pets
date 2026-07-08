@@ -179,16 +179,34 @@ export function makeCityTexture(): THREE.Texture {
   return tex
 }
 
-// Asphalt mit feinem Korn + Glanzpunkten -> realistischere Fahrbahn.
+// Dunkler Asphalt mit feinem Korn + Rissen -> echte Straße.
 export function makeRoadTexture(): THREE.Texture {
-  const [c, ctx] = canvas(256)
-  ctx.fillStyle = '#3b3f52'
-  ctx.fillRect(0, 0, 256, 256)
-  for (let i = 0; i < 6000; i++) {
-    const v = 40 + Math.floor(Math.random() * 50)
-    ctx.fillStyle = `rgb(${v},${v},${v + 8})`
-    ctx.globalAlpha = 0.4
-    ctx.fillRect(Math.random() * 256, Math.random() * 256, 1.5, 1.5)
+  const S = 512
+  const [c, ctx] = canvas(S)
+  ctx.fillStyle = '#33363f'
+  ctx.fillRect(0, 0, S, S)
+  // feines Korn
+  for (let i = 0; i < 16000; i++) {
+    const v = 30 + Math.floor(Math.random() * 40)
+    ctx.fillStyle = `rgb(${v},${v},${v + 6})`
+    ctx.globalAlpha = 0.35
+    ctx.fillRect(Math.random() * S, Math.random() * S, 2, 2)
+  }
+  // feine Risse
+  ctx.strokeStyle = '#22242b'
+  ctx.globalAlpha = 0.5
+  ctx.lineWidth = 1
+  for (let i = 0; i < 22; i++) {
+    ctx.beginPath()
+    let x = Math.random() * S
+    let y = Math.random() * S
+    ctx.moveTo(x, y)
+    for (let s = 0; s < 5; s++) {
+      x += (Math.random() - 0.5) * 70
+      y += (Math.random() - 0.5) * 70
+      ctx.lineTo(x, y)
+    }
+    ctx.stroke()
   }
   ctx.globalAlpha = 1
   const tex = new THREE.CanvasTexture(c)

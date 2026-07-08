@@ -5,6 +5,7 @@ import { Sky, Environment, Stars } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import { TrackCurve } from './trackCurve'
 import { Track } from './Track'
+import { Spectators, Birds } from './Ambience'
 import { KartModel } from './KartModel'
 import { controls } from './controls'
 import { useHudStore } from '../store/hudStore'
@@ -334,6 +335,11 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         shadow-camera-far={300}
       />
       <Track curve={curve} theme={theme} />
+      {/* Zuschauende Tiere am Rand + Vögel am Himmel */}
+      <Suspense fallback={null}>
+        <Spectators curve={curve} />
+      </Suspense>
+      {theme.sky !== 'night' && <Birds />}
       <Suspense fallback={null}>
         {karts.map((k, i) => (
           <KartModel

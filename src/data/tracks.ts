@@ -39,7 +39,7 @@ export const TRACKS: TrackDef[] = [
       fog: '#bcd6f0',
       ground: '#6fa04e',
       groundTex: 'grass',
-      road: '#8a8f9e',
+      road: '#585c68',
       decor: 'forest',
       accent: '#ff5d6c',
       envPreset: 'park',
