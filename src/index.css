@@ -2552,6 +2552,17 @@ body::before {
   .prerace-face { animation: none; }
 }
 
+/* Themen-Platzhalter für Strecken ohne eigenes Vorschaubild */
+.track-card-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.track-ph-emoji {
+  font-size: 46px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+
 /* ---------- Splash / Studio-Intro ---------- */
 .splash {
   position: fixed;

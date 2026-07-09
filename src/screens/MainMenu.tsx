@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore, EGG_COST } from '../store/gameStore'
 import { PETS, effectiveOwnedPets } from '../data/pets'
-import { TRACKS, isTrackUnlocked } from '../data/tracks'
+import { TRACKS, isTrackUnlocked, DECOR_EMOJI } from '../data/tracks'
 import { DAILY_TASKS } from '../data/dailyTasks'
 import { StatBar } from '../ui/StatBar'
 import { PetAvatar } from '../ui/PetAvatar'
@@ -232,7 +232,16 @@ export function MainMenu() {
               onClick={() => !locked && selectTrack(t.id)}
               style={active ? { borderColor: t.theme.accent, boxShadow: `0 0 30px ${t.theme.accent}` } : undefined}
             >
-              <img className="world-card-img" src={asset(WORLD_IMG[t.id])} alt={t.name} />
+              {WORLD_IMG[t.id] ? (
+                <img className="world-card-img" src={asset(WORLD_IMG[t.id])} alt={t.name} />
+              ) : (
+                <div
+                  className="world-card-img track-card-ph"
+                  style={{ background: `linear-gradient(135deg, ${t.theme.hemiSky}, ${t.theme.accent})` }}
+                >
+                  <span className="track-ph-emoji">{DECOR_EMOJI[t.theme.decor]}</span>
+                </div>
+              )}
               {locked && (
                 <div className="lock-overlay">
                   <span className="lock-ico">🔒</span>

@@ -1,7 +1,8 @@
 // Der „Goldene Cup" – eine Meisterschaft über mehrere Strecken mit Punkte-Tabelle
 // und einem Erzrivalen. Reine Logik/Text, keine neuen Assets.
 
-export const CUP_TRACKS = ['fluesterwald', 'candychaos', 'vulkanrasen', 'sternenkolonie']
+// Meisterschaft über alle Welten (eine Strecke je Thema, gemischt alt/neu).
+export const CUP_TRACKS = ['fluesterwald', 'zuckerwirbel', 'vulkanrasen', 'gletschergleiter', 'sternenkolonie']
 export const CUP_POINTS = [0, 10, 6, 3, 1] // Index = Platz (1..4)
 
 // Erzrivale: der amtierende Champion Drako. Spielt man selbst Drako, tritt Neko an.
@@ -14,6 +15,7 @@ export function rivalTaunt(index: number, rivalName: string): string {
   const lines = [
     `${rivalName} grinst: „Der Goldene Cup gehört MIR. Versuch's ruhig, Neuling."`,
     `${rivalName} schnaubt: „Ein Rennen gewonnen? Zufall. Das wird sich nicht wiederholen."`,
+    `${rivalName}: „Halbzeit im Cup – und ich führe. Wie erwartet."`,
     `${rivalName}: „Vorletztes Rennen. Du kommst trotzdem nicht an mir vorbei."`,
     `${rivalName} stößt Rauch aus: „Das FINALE. Zeig mir alles, was du hast – es reicht nicht."`,
   ]

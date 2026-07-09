@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore'
-import { TRACKS, isTrackUnlocked } from '../data/tracks'
+import { TRACKS, isTrackUnlocked, DECOR_EMOJI } from '../data/tracks'
 import { asset } from '../utils/asset'
 import { playerLevelFromPoints } from '../data/progression'
 
@@ -46,7 +46,16 @@ export function TrackSelect() {
               onClick={() => !locked && selectTrack(t.id)}
               style={active ? { borderColor: t.theme.accent, boxShadow: `0 0 26px ${t.theme.accent}aa` } : undefined}
             >
-              <img className="track-card-img" src={asset(WORLD_IMG[t.id])} alt={t.name} />
+              {WORLD_IMG[t.id] ? (
+                <img className="track-card-img" src={asset(WORLD_IMG[t.id])} alt={t.name} />
+              ) : (
+                <div
+                  className="track-card-img track-card-ph"
+                  style={{ background: `linear-gradient(135deg, ${t.theme.hemiSky}, ${t.theme.accent})` }}
+                >
+                  <span className="track-ph-emoji">{DECOR_EMOJI[t.theme.decor]}</span>
+                </div>
+              )}
               <span className="track-num">{i + 1}</span>
               <div className="track-overlay">
                 <div className="track-info">

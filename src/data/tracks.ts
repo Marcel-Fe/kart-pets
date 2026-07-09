@@ -29,6 +29,45 @@ export interface TrackDef {
   points: [number, number][]
 }
 
+// Erzeugt eine garantiert glatte, geschlossene Streckenschleife (Ellipse mit
+// sanften „Lappen"). So lassen sich viele unterschiedliche, aber fahrbare
+// Layouts ohne Handarbeit definieren (kein Selbstschnitt bei amp <= ~0.2).
+function makeLoop(rx: number, rz: number, lobes: number, amp: number, rot: number, n = 12): [number, number][] {
+  const pts: [number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2
+    const rf = 1 + amp * Math.sin(lobes * a)
+    const x0 = Math.cos(a) * rx * rf
+    const z0 = Math.sin(a) * rz * rf
+    const x = x0 * Math.cos(rot) - z0 * Math.sin(rot)
+    const z = x0 * Math.sin(rot) + z0 * Math.cos(rot)
+    pts.push([Math.round(x), Math.round(z)])
+  }
+  return pts
+}
+
+// Themen werden zwischen Strecken geteilt (gleiche Welt-Optik, andere Streckenform).
+const THEME_FOREST: TrackTheme = {
+  sky: 'day', fog: '#bcd6f0', ground: '#6fa04e', groundTex: 'grass', road: '#585c68',
+  decor: 'forest', accent: '#ff5d6c', envPreset: 'park', ambient: 0.25, hemiSky: '#bfe3ff', hemiGround: '#3a7a48',
+}
+const THEME_CANDY: TrackTheme = {
+  sky: 'day', fog: '#ffd9ef', ground: '#ffc8e6', groundTex: 'candy', road: '#b98cff',
+  decor: 'candy', accent: '#ff3fa0', envPreset: 'dawn', ambient: 0.4, hemiSky: '#ffd6f2', hemiGround: '#ff8fc4',
+}
+const THEME_VOLCANO: TrackTheme = {
+  sky: 'sunset', fog: '#5a2a22', ground: '#4a3a36', groundTex: 'rock', road: '#3a3438',
+  decor: 'volcano', accent: '#ff7a1f', envPreset: 'sunset', ambient: 0.3, hemiSky: '#ff8a4a', hemiGround: '#2a1410',
+}
+const THEME_ICE: TrackTheme = {
+  sky: 'day', fog: '#cfe9ff', ground: '#eaf6ff', groundTex: 'ice', road: '#bfe0f5',
+  decor: 'ice', accent: '#4fd0ff', envPreset: 'dawn', ambient: 0.35, hemiSky: '#dff1ff', hemiGround: '#9fc6e6',
+}
+const THEME_CITY: TrackTheme = {
+  sky: 'night', fog: '#0c0824', ground: '#161033', groundTex: 'city', road: '#2a2150',
+  decor: 'city', accent: '#b56bff', envPreset: 'night', ambient: 0.22, hemiSky: '#3a2a7a', hemiGround: '#070411',
+}
+
 export const TRACKS: TrackDef[] = [
   {
     id: 'fluesterwald',
@@ -150,10 +189,65 @@ export const TRACKS: TrackDef[] = [
       [-45, -120], [-120, -70], [-135, 18], [-95, 90], [-35, 115],
     ],
   },
+  // --- Weitere Strecken (geteilte Themen, eigene Streckenform) ---
+  {
+    id: 'waldsprint',
+    name: 'Wald-Sprint',
+    difficulty: 'Normal',
+    laps: 3,
+    unlockAtLevel: 5,
+    theme: THEME_FOREST,
+    points: makeLoop(136, 108, 2, 0.12, 0.35),
+  },
+  {
+    id: 'zuckerwirbel',
+    name: 'Zucker-Wirbel',
+    difficulty: 'Normal',
+    laps: 3,
+    unlockAtLevel: 6,
+    theme: THEME_CANDY,
+    points: makeLoop(104, 122, 3, 0.16, 0),
+  },
+  {
+    id: 'lavaring',
+    name: 'Lava-Ring',
+    difficulty: 'Schwer',
+    laps: 3,
+    unlockAtLevel: 7,
+    theme: THEME_VOLCANO,
+    points: makeLoop(130, 128, 2, 0.14, 0.8),
+  },
+  {
+    id: 'gletschergleiter',
+    name: 'Gletscher-Gleiter',
+    difficulty: 'Schwer',
+    laps: 3,
+    unlockAtLevel: 8,
+    theme: THEME_ICE,
+    points: makeLoop(122, 106, 3, 0.1, 0.4),
+  },
+  {
+    id: 'neonkreisel',
+    name: 'Neon-Kreisel',
+    difficulty: 'Schwer',
+    laps: 3,
+    unlockAtLevel: 9,
+    theme: THEME_CITY,
+    points: makeLoop(114, 126, 4, 0.12, 0),
+  },
 ]
 
 export function getTrack(id: string): TrackDef {
   return TRACKS.find((t) => t.id === id) ?? TRACKS[0]
+}
+
+// Emoji je Welt – für Karten ohne eigenes Vorschaubild (sauberer Platzhalter).
+export const DECOR_EMOJI: Record<DecorKind, string> = {
+  forest: '🌲',
+  candy: '🍭',
+  volcano: '🌋',
+  city: '🌃',
+  ice: '❄️',
 }
 
 // In der Demo alle Strecken frei; sonst Level-Sperre (`unlockAtLevel`). Schalter
