@@ -390,9 +390,11 @@ export function Track({ curve, theme }: Props) {
   const lineR = useMemo(() => curve.buildLineGeometry(-edge), [curve, edge])
   const scatter = useScatter(curve)
   const sway = useWind()
-  // Straßenrand-Details entlang der Strecke (nur Dorf/Wald – passt zur Design-Bibel).
+  // Straßenrand-Details entlang der Strecke. Wald nutzt die volle Palette
+  // (Zaun/Laterne/Fass/Reifen/Pylone/Blumen); andere Welten nur die neutralen
+  // Renn-Elemente (Laterne, Reifenstapel, Pylone), damit nichts fehl am Platz wirkt.
   const roadside = useMemo<PropDef[]>(() => {
-    if (theme.decor !== 'forest') return []
+    const NEUTRAL = [1, 3, 4] // Laterne, Reifenstapel, Pylone – passen überall
     const out: PropDef[] = []
     const n = curve.samples.length
     let k = 0
@@ -406,7 +408,7 @@ export function Track({ curve, theme }: Props) {
         x: p.x + nor.x * dist * side,
         z: p.z + nor.z * dist * side,
         rot: Math.atan2(tan.x, tan.z),
-        type: k % 6,
+        type: theme.decor === 'forest' ? k % 6 : NEUTRAL[k % NEUTRAL.length],
       })
       k++
     }

@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore'
-import { TRACKS } from '../data/tracks'
+import { TRACKS, isTrackUnlocked } from '../data/tracks'
 import { asset } from '../utils/asset'
 import { playerLevelFromPoints } from '../data/progression'
 
@@ -19,7 +19,7 @@ export function TrackSelect() {
 
   const level = playerLevelFromPoints(totalPoints).level
   const selected = TRACKS.find((t) => t.id === selectedTrackId) ?? TRACKS[0]
-  const selectedLocked = level < selected.unlockAtLevel
+  const selectedLocked = !isTrackUnlocked(selected, level)
 
   return (
     <div className="screen tracks-screen">
@@ -36,7 +36,7 @@ export function TrackSelect() {
 
       <div className="track-list">
         {TRACKS.map((t, i) => {
-          const locked = level < t.unlockAtLevel
+          const locked = !isTrackUnlocked(t, level)
           const active = t.id === selectedTrackId
           const stars = Math.min(5, 1 + t.unlockAtLevel)
           return (

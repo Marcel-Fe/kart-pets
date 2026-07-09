@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore, EGG_COST } from '../store/gameStore'
 import { PETS } from '../data/pets'
-import { TRACKS } from '../data/tracks'
+import { TRACKS, isTrackUnlocked } from '../data/tracks'
 import { DAILY_TASKS } from '../data/dailyTasks'
 import { StatBar } from '../ui/StatBar'
 import { PetAvatar } from '../ui/PetAvatar'
@@ -77,7 +77,7 @@ export function MainMenu() {
   const xpPct = Math.min(100, (player.intoLevel / player.need) * 100)
   const selected = PETS.find((p) => p.id === selectedPetId) ?? PETS[0]
   const selectedTrack = TRACKS.find((t) => t.id === selectedTrackId) ?? TRACKS[0]
-  const selectedTrackLocked = player.level < selectedTrack.unlockAtLevel
+  const selectedTrackLocked = !isTrackUnlocked(selectedTrack, player.level)
   const info = levelFromXp(petXp[selectedPetId] ?? 0)
   const tasksReady = DAILY_TASKS.filter(
     (t) => (prog[t.metric] ?? 0) >= t.goal && !claimed.includes(t.id),
@@ -223,7 +223,7 @@ export function MainMenu() {
       </div>
       <div className="world-strip" id="world-strip">
         {TRACKS.map((t) => {
-          const locked = player.level < t.unlockAtLevel
+          const locked = !isTrackUnlocked(t, player.level)
           const active = t.id === selectedTrackId
           return (
             <button

@@ -154,4 +154,12 @@ export function getTrack(id: string): TrackDef {
   return TRACKS.find((t) => t.id === id) ?? TRACKS[0]
 }
 
+// Demo: alle Strecken frei spielbar. Für den App-/Play-Store-Release auf `false`
+// setzen – dann greift wieder die Level-Sperre (`unlockAtLevel`) pro Strecke.
+export const DEMO_UNLOCK_ALL = true
+
+export function isTrackUnlocked(track: TrackDef, playerLevel: number): boolean {
+  return DEMO_UNLOCK_ALL || playerLevel >= track.unlockAtLevel
+}
+
 export const ROAD_WIDTH = 16
