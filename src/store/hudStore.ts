@@ -9,6 +9,7 @@ interface HudState {
   totalLaps: number
   boostCharge: number // 0..1
   countdown: number // >0 = Countdown läuft (3,2,1), 0 = GO/fahren
+  intro: boolean // true während der Vorstart-Kamerafahrt (Sprechblasen sichtbar)
   speedKmh: number
   coins: number // im Rennen eingesammelte Münzen
   set: (p: Partial<HudState>) => void
@@ -21,6 +22,7 @@ export const useHudStore = create<HudState>((set) => ({
   totalLaps: 3,
   boostCharge: 0,
   countdown: 3,
+  intro: false,
   speedKmh: 0,
   coins: 0,
   set: (p) => set(p),

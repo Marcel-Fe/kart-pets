@@ -287,6 +287,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         totalLaps: track.laps,
         boostCharge: player.driftCharge,
         countdown: introing ? -1 : Math.ceil(countdown.current),
+        intro: introing,
         speedKmh: speedKmh(player),
         coins: coinsGot.current,
       })

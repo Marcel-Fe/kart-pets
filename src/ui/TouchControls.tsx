@@ -1,4 +1,5 @@
 import { controls } from '../game/controls'
+import { useHudStore } from '../store/hudStore'
 
 type Key = 'steerLeft' | 'steerRight' | 'throttle' | 'drift' | 'boost'
 
@@ -16,6 +17,10 @@ function hold(key: Key) {
 }
 
 export function TouchControls() {
+  // Boost feuert erst ab geladener Leiste (>0.25). Knopf zeigt das an:
+  // dunkel = noch laden (erst driften), leuchtend = feuerbereit.
+  const boostReady = useHudStore((s) => s.boostCharge) >= 0.25
+
   return (
     <div className="touch-layer">
       <div className="touch-left">
@@ -31,7 +36,7 @@ export function TouchControls() {
           <button className="tc-btn drift" {...hold('drift')}>
             DRIFT
           </button>
-          <button className="tc-btn boost" {...hold('boost')}>
+          <button className={'tc-btn boost' + (boostReady ? ' ready' : ' dim')} {...hold('boost')}>
             BOOST
           </button>
         </div>

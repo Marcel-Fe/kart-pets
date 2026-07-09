@@ -708,6 +708,25 @@ body {
   font-size: 15px;
 }
 .tc-btn.boost:active { box-shadow: 0 2px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+/* Boost noch nicht geladen: gedämpft + „gesperrt"-Hinweis (erst driften) */
+.tc-btn.boost.dim {
+  filter: grayscale(0.6) brightness(0.6);
+  opacity: 0.55;
+}
+/* Boost feuerbereit: leuchtet und pulsiert, damit man weiß WANN es geht */
+.tc-btn.boost.ready {
+  filter: brightness(1.12);
+  box-shadow: 0 5px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 18px 3px rgba(154, 123, 255, 0.85);
+  animation: boost-ready-pulse 0.8s ease-in-out infinite;
+}
+@keyframes boost-ready-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-btn.boost.ready { animation: none; }
+}
 
 /* ---------- Result ---------- */
 .result {

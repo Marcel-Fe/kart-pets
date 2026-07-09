@@ -13,6 +13,7 @@ export function Hud() {
   const totalLaps = useHudStore((s) => s.totalLaps)
   const boostCharge = useHudStore((s) => s.boostCharge)
   const countdown = useHudStore((s) => s.countdown)
+  const intro = useHudStore((s) => s.intro)
   const speedKmh = useHudStore((s) => s.speedKmh)
   const coins = useHudStore((s) => s.coins)
   const setScreen = useGameStore((s) => s.setScreen)
@@ -31,7 +32,8 @@ export function Hud() {
       )}
       <div className="hud-coins">🪙 {coins}</div>
 
-      {countdown < 0 && <PreRaceDialog playerId={selectedPetId} />}
+      {/* Sprechblasen NUR vor dem Rennen (Intro-Kamerafahrt + Countdown), dann weg */}
+      {(intro || countdown > 0) && <PreRaceDialog playerId={selectedPetId} />}
 
       <button
         className="hud-sound"
