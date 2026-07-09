@@ -2162,14 +2162,93 @@ body::before {
   position: relative;
   z-index: 2;
   align-self: end;
-  margin-bottom: 44px;      /* Kart steht auf dem Werkstattboden */
+  margin-bottom: 52px;      /* Kart steht auf der Hebebühne */
   max-width: 62%;
   max-height: 152px;
   object-fit: contain;
   filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.6));
-  animation: kart-reveal 0.9s cubic-bezier(.2,.7,.3,1) 0.45s both,
-             garage-float 3.4s ease-in-out 1.3s infinite;
-  transition: scale 0.25s ease, filter 0.25s ease;
+  animation: kart-reveal 0.9s cubic-bezier(.2,.7,.3,1) 0.9s both,
+             garage-float 4.2s ease-in-out 1.8s infinite;
+  transition: scale 0.25s ease, filter 0.25s ease, translate 0.3s ease;
+}
+.garage-stage.has-focus .garage-kart-img { translate: 0 -10px; } /* mit der Bühne hoch */
+
+/* ---------- Hebebühne ---------- */
+.garage-lift {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: 208px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+.garage-stage.has-focus .garage-lift { transform: translateX(-50%) translateY(-10px); }
+.lift-plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #7b8394 0%, #454b58 52%, #23262e 100%);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.22);
+}
+.lift-plate::after { /* Warn-Kante vorn */
+  content: '';
+  position: absolute;
+  left: 6px; right: 6px; bottom: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(45deg, #f5c518 0 8px, #1a1a1a 8px 16px);
+  opacity: 0.85;
+}
+.lift-post {
+  position: absolute;
+  top: 14px;
+  width: 15px;
+  height: 30px;
+  background: linear-gradient(90deg, #565d6d 0%, #2b2f39 100%);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.lift-post.left { left: 44px; }
+.lift-post.right { right: 44px; }
+
+/* ---------- Werkstatt-Rolltor ---------- */
+.garage-door {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  transform-origin: top;
+  background:
+    repeating-linear-gradient(180deg, #3b4150 0 15px, #2b303c 15px 17px);
+  box-shadow: inset 0 -24px 34px rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.08);
+  animation: garage-door-open 1.15s cubic-bezier(.72, 0, .28, 1) 0.35s forwards;
+}
+.garage-door::after { /* Warnstreifen an der Unterkante des Tors */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 14px;
+  background: repeating-linear-gradient(45deg, #f5c518 0 16px, #17171a 16px 32px);
+}
+.door-pull { /* Griffleiste */
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 9px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #9aa1af, #4a4f5b);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+@keyframes garage-door-open {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-102%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .garage-door { animation: none; transform: translateY(-102%); }
 }
 /* Kart hervorgehoben bei Upgrade-Auswahl (scale-Property komponiert mit Float-transform) */
 .garage-kart-img.kart-focus {
@@ -2182,7 +2261,7 @@ body::before {
 }
 @keyframes garage-float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-3px); }
 }
 /* Info-Pille ueber dem Kart: zeigt Teil + Bonus beim Hervorheben */
 .kart-focus-tag {

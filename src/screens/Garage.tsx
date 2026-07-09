@@ -70,6 +70,12 @@ export function Garage() {
           className="garage-disc"
           style={{ background: `radial-gradient(ellipse at 50% 50%, ${pet.color}bb, ${pet.color}22 60%, transparent)` }}
         />
+        {/* Hebebühne: Kart steht zum Schrauben auf der Bühne (hebt beim Fokus an) */}
+        <div className="garage-lift" aria-hidden="true">
+          <span className="lift-post left" />
+          <span className="lift-post right" />
+          <span className="lift-plate" />
+        </div>
         {/* Jedes Pet zeigt ein echtes Kart (Standard: Viper 01), nicht mehr sein Porträt */}
         <img
           className={'garage-kart-img' + (focus ? ' kart-focus' : '')}
@@ -84,6 +90,10 @@ export function Garage() {
         )}
         {/* „Licht geht an" – blendet beim Betreten einmalig auf */}
         <div className="garage-lights" />
+        {/* Werkstatt-Rolltor: öffnet sich einmalig beim Betreten der Garage */}
+        <div className="garage-door" aria-hidden="true">
+          <span className="door-pull" />
+        </div>
       </div>
       <div className="pet-card-name garage-kart-name">{pet.name}s Kart</div>
 
