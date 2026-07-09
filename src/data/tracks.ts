@@ -1,3 +1,5 @@
+import { DEMO_UNLOCK_ALL } from './demo'
+
 export type DecorKind = 'forest' | 'candy' | 'volcano' | 'city' | 'ice'
 export type GroundKind = 'grass' | 'candy' | 'rock' | 'city' | 'ice'
 export type SkyKind = 'day' | 'sunset' | 'night'
@@ -154,10 +156,8 @@ export function getTrack(id: string): TrackDef {
   return TRACKS.find((t) => t.id === id) ?? TRACKS[0]
 }
 
-// Demo: alle Strecken frei spielbar. Für den App-/Play-Store-Release auf `false`
-// setzen – dann greift wieder die Level-Sperre (`unlockAtLevel`) pro Strecke.
-export const DEMO_UNLOCK_ALL = true
-
+// In der Demo alle Strecken frei; sonst Level-Sperre (`unlockAtLevel`). Schalter
+// zentral in `data/demo.ts`.
 export function isTrackUnlocked(track: TrackDef, playerLevel: number): boolean {
   return DEMO_UNLOCK_ALL || playerLevel >= track.unlockAtLevel
 }

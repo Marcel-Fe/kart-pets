@@ -1,4 +1,5 @@
 import type { Pet, AIStyle } from '../types'
+import { DEMO_UNLOCK_ALL } from './demo'
 
 // Kern-Pets aus dem Konzept (Prompt 3). Stats wirken aufs Fahrverhalten.
 export const PETS: Pet[] = [
@@ -163,6 +164,13 @@ export const PETS: Pet[] = [
 
 export function getPet(id: string): Pet {
   return PETS.find((p) => p.id === id) ?? PETS[0]
+}
+
+// In der Demo gehören alle Charaktere dem Spieler (zum Zeigen/Spielen); sonst nur
+// die tatsächlich freigeschalteten (Kern-Pets + per Ei geschlüpfte).
+export function effectiveOwnedPets(owned: string[] | undefined): string[] {
+  if (DEMO_UNLOCK_ALL) return PETS.map((p) => p.id)
+  return owned ?? []
 }
 
 // Drei KI-Gegner mit unterschiedlichen Fahrstilen.

@@ -1,5 +1,5 @@
 import { useGameStore, EGG_COST } from '../store/gameStore'
-import { PETS, getPet } from '../data/pets'
+import { PETS, getPet, effectiveOwnedPets } from '../data/pets'
 import { asset } from '../utils/asset'
 import { levelFromXp, STAGE_EMOJI } from '../data/progression'
 import type { Rarity } from '../types'
@@ -21,7 +21,7 @@ export function PetEggs() {
   const lastHatched = useGameStore((s) => s.lastHatched)
   const setScreen = useGameStore((s) => s.setScreen)
 
-  const owned = ownedPets ?? []
+  const owned = effectiveOwnedPets(ownedPets)
   const locked = PETS.filter((p) => !owned.includes(p.id))
   const allOwned = locked.length === 0
   const canHatch = !allOwned && coins >= EGG_COST

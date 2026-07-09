@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore, EGG_COST } from '../store/gameStore'
-import { PETS } from '../data/pets'
+import { PETS, effectiveOwnedPets } from '../data/pets'
 import { TRACKS, isTrackUnlocked } from '../data/tracks'
 import { DAILY_TASKS } from '../data/dailyTasks'
 import { StatBar } from '../ui/StatBar'
@@ -70,7 +70,7 @@ export function MainMenu() {
     return () => clearTimeout(t)
   }, [soon])
 
-  const owned = ownedPets ?? []
+  const owned = effectiveOwnedPets(ownedPets)
   const prog = dailyProgress ?? {}
   const claimed = claimedTasks ?? []
   const player = playerLevelFromPoints(totalPoints)
