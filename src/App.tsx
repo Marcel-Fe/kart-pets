@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from './store/gameStore'
+import { sfx } from './audio/sfx'
 import { Splash } from './ui/Splash'
 import { MainMenu } from './screens/MainMenu'
 import { RaceScreen } from './screens/RaceScreen'
@@ -15,6 +16,18 @@ import { CupScreen } from './screens/CupScreen'
 export default function App() {
   const screen = useGameStore((s) => s.screen)
   const [booting, setBooting] = useState(true)
+
+  // Browser erlauben Ton erst nach einer Nutzer-Geste – beim ersten Tippen aufwecken.
+  useEffect(() => {
+    const wake = () => sfx.resume()
+    window.addEventListener('pointerdown', wake, { once: true })
+    return () => window.removeEventListener('pointerdown', wake)
+  }, [])
+
+  // Renn-Musik im Rennen, sonst ruhige Menü-Musik.
+  useEffect(() => {
+    sfx.music(screen === 'race' ? 'race' : 'menu')
+  }, [screen])
 
   return (
     <div className="app">

@@ -13,6 +13,19 @@ let engine: { osc: OscillatorNode; sub: OscillatorNode; filter: BiquadFilterNode
 // Drift-Rausch (dauerhaft während des Driftens)
 let drift: { src: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode } | null = null
 
+// --- Musik: komplett aus Code erzeugt, keine Audio-Dateien, keine Lizenzfragen ---
+export type Mood = 'menu' | 'race'
+let music: { mood: Mood; gain: GainNode; timer: number; next: number; step: number } | null = null
+
+// Vier Akkorde (I – vi – IV – V in C-Dur): [Bass, Terz/Quinte, Oberstimme]
+const CHORDS = [
+  [130.81, 261.63, 329.63], // C
+  [110.0, 220.0, 261.63], // Am
+  [87.31, 174.61, 220.0], // F
+  [98.0, 196.0, 246.94], // G
+]
+const STEPS_PER_CHORD = 8 // Achtelnoten je Akkord -> 32 Schritte pro Schleife
+
 function loadEnabled(): boolean {
   try {
     const v = localStorage.getItem(STORAGE_KEY)
@@ -68,8 +81,103 @@ function blip(freq: number, dur: number, type: OscillatorType, vol: number, glid
   osc.stop(t + dur + 0.02)
 }
 
+// Ein Ton mit weicher Hüllkurve, direkt in den Musik-Bus.
+function tone(freq: number, at: number, dur: number, vol: number, type: OscillatorType, bus: GainNode) {
+  const c = ctx
+  if (!c) return
+  const osc = c.createOscillator()
+  const g = c.createGain()
+  osc.type = type
+  osc.frequency.setValueAtTime(freq, at)
+  g.gain.setValueAtTime(0.0001, at)
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.012)
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur)
+  osc.connect(g).connect(bus)
+  osc.start(at)
+  osc.stop(at + dur + 0.02)
+}
+
+// Kurzes Rausch-Zischen (Hi-Hat) für den Renn-Beat.
+function hat(at: number, vol: number, bus: GainNode) {
+  const c = ctx
+  if (!c) return
+  const src = c.createBufferSource()
+  src.buffer = noise(c)
+  const hp = c.createBiquadFilter()
+  hp.type = 'highpass'
+  hp.frequency.value = 7000
+  const g = c.createGain()
+  g.gain.setValueAtTime(vol, at)
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.05)
+  src.connect(hp).connect(g).connect(bus)
+  src.start(at)
+  src.stop(at + 0.07)
+}
+
+// Plant die nächsten Schritte im Voraus (Web-Audio-Uhr, nicht setInterval-Timing).
+function scheduleMusic() {
+  const c = ctx
+  if (!c || !music) return
+  const fast = music.mood === 'race'
+  const bpm = fast ? 132 : 92
+  const stepDur = 60 / bpm / 2 // Achtelnoten
+  const bus = music.gain
+
+  while (music.next < c.currentTime + 0.15) {
+    const s = music.step
+    const at = music.next
+    const chord = CHORDS[Math.floor(s / STEPS_PER_CHORD) % CHORDS.length]
+    const inChord = s % STEPS_PER_CHORD
+
+    // Bass auf Zählzeit 1 und 3
+    if (inChord === 0 || inChord === 4) {
+      tone(chord[0], at, fast ? 0.28 : 0.5, fast ? 0.14 : 0.1, 'triangle', bus)
+    }
+    // Melodie: wechselnd Terz/Oberstimme, im Rennen dichter
+    if (fast || inChord % 2 === 0) {
+      const mel = chord[1 + (s % 2)]
+      tone(mel, at, fast ? 0.16 : 0.34, fast ? 0.055 : 0.045, 'square', bus)
+    }
+    // Beat nur im Rennen
+    if (fast) hat(at, inChord % 2 === 0 ? 0.035 : 0.018, bus)
+
+    music.next += stepDur
+    music.step = (s + 1) % (CHORDS.length * STEPS_PER_CHORD)
+  }
+}
+
 export const sfx = {
   isEnabled: () => enabled,
+
+  // --- Musik: 'menu' ruhig, 'race' treibend, 'off' aus. Folgt dem Mute-Schalter. ---
+  music(mood: Mood | 'off') {
+    const c = ensure()
+    if (!c || !master) return
+    if (mood === 'off') return this.stopMusic()
+    if (music?.mood === mood) return // läuft schon
+    this.stopMusic()
+    const gain = c.createGain()
+    gain.gain.value = 0
+    gain.connect(master)
+    gain.gain.setTargetAtTime(mood === 'race' ? 0.5 : 0.34, c.currentTime, 0.6)
+    music = { mood, gain, timer: 0, next: c.currentTime + 0.06, step: 0 }
+    scheduleMusic()
+    music.timer = window.setInterval(scheduleMusic, 25)
+  },
+
+  stopMusic() {
+    if (!music) return
+    const m = music
+    music = null
+    window.clearInterval(m.timer)
+    try {
+      const c = ctx!
+      m.gain.gain.setTargetAtTime(0, c.currentTime, 0.15)
+      window.setTimeout(() => m.gain.disconnect(), 900)
+    } catch {
+      /* ignore */
+    }
+  },
 
   // Muss nach einer Nutzer-Geste laufen (Autoplay-Policy).
   resume() {
