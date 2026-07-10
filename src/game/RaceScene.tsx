@@ -25,6 +25,7 @@ import {
   type ItemBox,
   type Item,
 } from './hazards'
+import { rubberbandFactor } from './rubberband'
 import {
   spectatorPositions,
   cheerGain,
@@ -273,10 +274,13 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         dt,
       )
 
-      // KI
+      // KI + dezentes Gummiband (hält das Feld beisammen, ohne raceSim zu ändern):
+      // Zurückliegende KI etwas schneller, führende etwas langsamer.
+      const playerProgress = player.lap + player.t
       for (let i = 1; i < karts.length; i++) {
         const proj = curve.project(karts[i].x, karts[i].z)
         updateAI(karts[i], curve, proj.lateral, dt)
+        karts[i].speed *= rubberbandFactor(karts[i].lap + karts[i].t, playerProgress)
       }
 
       if (import.meta.env.DEV) {
