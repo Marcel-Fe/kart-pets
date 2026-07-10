@@ -11,11 +11,31 @@ export const BOX_RESPAWN = 5 // Sekunden bis eine Item-Box wiederkommt
 export const SPIN_MAX_SPEED = 7 // gedeckeltes Tempo während des Schleuderns
 export const SPIN_SPEED_KEEP = 0.35 // Restgeschwindigkeit direkt beim Treffer
 export const DROP_BEHIND = 2.6 // Meter hinter dem Kart wird abgelegt
+export const ROCKET_BOOST_TIME = 1.2 // Sekunden Schub, wenn die Rakete gezündet wird
 
 const BANANA_R2 = BANANA_HIT_R * BANANA_HIT_R
 const BOX_R2 = BOX_HIT_R * BOX_HIT_R
 
-export type Item = 'banana' | null
+// Gehaltene Items. 'banana' offensiv (ablegen), 'rocket' Schub + Immunität,
+// 'shield' fängt den nächsten Treffer ab.
+export type HeldItem = 'banana' | 'rocket' | 'shield'
+export type Item = HeldItem | null
+
+/**
+ * Bestimmt das Item beim Aufheben einer Box – Mario-Kart-Prinzip: wer vorne
+ * liegt, bekommt fast nur Bananen (offensiv), wer hinten liegt, häufiger die
+ * stärkeren Aufhol-Items (Rakete, Schild). Rein & deterministisch über `rnd`.
+ * @param rank 1 = Führender, `totalRacers` = Letzter
+ */
+export function rollItem(rank: number, totalRacers: number, rnd: () => number): HeldItem {
+  const frac = totalRacers > 1 ? (rank - 1) / (totalRacers - 1) : 0 // 0 vorne .. 1 hinten
+  const pRocket = 0.1 + frac * 0.5 // 10 % vorne .. 60 % hinten
+  const pShield = 0.1 + frac * 0.2 // 10 % vorne .. 30 % hinten
+  const r = rnd()
+  if (r < pRocket) return 'rocket'
+  if (r < pRocket + pShield) return 'shield'
+  return 'banana'
+}
 
 export interface Vec2 {
   x: number
@@ -92,7 +112,13 @@ export function updateHazards(
   held: Item[],
   prev: Vec2[],
   dt: number,
-  cb?: { onHit?: (kartIndex: number) => void; onPickup?: (kartIndex: number) => void },
+  cb?: {
+    onHit?: (kartIndex: number) => void
+    onPickup?: (kartIndex: number) => void
+    onShieldBlock?: (kartIndex: number) => void
+  },
+  shield?: boolean[], // true = fängt den nächsten Treffer ab (wird dabei verbraucht)
+  rollFn?: (kartIndex: number) => HeldItem, // liefert das Item beim Box-Aufheben (sonst 'banana')
 ): void {
   // 1) Schleudern abbauen und Tempo deckeln
   for (let i = 0; i < karts.length; i++) {
@@ -117,12 +143,17 @@ export function updateHazards(
       const az = p ? p.z : karts[k].z
       // die GANZE Bewegung dieses Schritts prüfen, nicht nur den Endpunkt
       if (segDist2(b.x, b.z, ax, az, karts[k].x, karts[k].z) > BANANA_R2) continue
-      spin[k] = SPIN_DURATION
-      karts[k].speed *= SPIN_SPEED_KEEP
-      karts[k].driftCharge = 0
       if (b.fixed) b.timer = BANANA_RESPAWN // Strecken-Banane kommt zurück
       else b.alive = false // abgelegte ist aufgebraucht
-      cb?.onHit?.(k)
+      if (shield && shield[k]) {
+        shield[k] = false // Schild fängt den Treffer ab und ist verbraucht
+        cb?.onShieldBlock?.(k)
+      } else {
+        spin[k] = SPIN_DURATION
+        karts[k].speed *= SPIN_SPEED_KEEP
+        karts[k].driftCharge = 0
+        cb?.onHit?.(k)
+      }
       break
     }
   }
@@ -139,7 +170,7 @@ export function updateHazards(
       const ax = p ? p.x : karts[k].x
       const az = p ? p.z : karts[k].z
       if (segDist2(box.x, box.z, ax, az, karts[k].x, karts[k].z) > BOX_R2) continue
-      held[k] = 'banana'
+      held[k] = rollFn ? rollFn(k) : 'banana'
       box.timer = BOX_RESPAWN
       cb?.onPickup?.(k)
       break

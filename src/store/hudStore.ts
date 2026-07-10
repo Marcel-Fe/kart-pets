@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Item } from '../game/hazards'
 
 // Live-Renndaten fürs HUD. Getrennt vom Spielstand, damit nur das HUD
 // neu rendert – nicht der teure 3D-Canvas.
@@ -12,7 +13,7 @@ interface HudState {
   intro: boolean // true während der Vorstart-Kamerafahrt (Sprechblasen sichtbar)
   speedKmh: number
   coins: number // im Rennen eingesammelte Münzen
-  item: 'banana' | null // gehaltenes Item
+  item: Item // gehaltenes Item (Banane, Rakete oder Schild)
   set: (p: Partial<HudState>) => void
 }
 

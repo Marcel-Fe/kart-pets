@@ -32,14 +32,14 @@ export function TouchControls() {
         <button className="tc-btn steer" {...hold('steerRight')} aria-label="Rechts">
           ►
         </button>
-        {/* Item: leuchtet nur, wenn du eine Banane hast. Ablegen = fallen lassen. */}
+        {/* Item: leuchtet nur, wenn du eins hast. Banane ablegen, Rakete zünden, Schild an. */}
         <button
           className={'tc-btn item' + (item ? ' has' : '')}
           {...hold('useItem')}
           disabled={!item}
-          aria-label="Banane ablegen"
+          aria-label="Item benutzen"
         >
-          {item ? '🍌' : '–'}
+          {item === 'rocket' ? '🚀' : item === 'shield' ? '🛡️' : item === 'banana' ? '🍌' : '–'}
         </button>
       </div>
       <div className="touch-right">

@@ -3,12 +3,14 @@ import {
   dropBanana,
   bananaVisible,
   spinAngle,
+  rollItem,
   SPIN_DURATION,
   SPIN_MAX_SPEED,
   DROP_BEHIND,
   type Banana,
   type ItemBox,
   type Item,
+  type HeldItem,
   type Vec2,
 } from '../src/game/hazards.ts'
 
@@ -130,6 +132,54 @@ const box = (x: number, z: number): ItemBox => ({ x, z, timer: 0 })
 {
   const full: Banana[] = [{ x: 0, z: 0, timer: 0, fixed: false, alive: true }]
   ok('ohne freien Platz wird nichts abgelegt', !dropBanana(kart(5, 5, 30, true, 0), full))
+}
+
+// --- Schild fängt den nächsten Treffer ab ---
+{
+  const k = [kart(0, 0)]
+  const b = [fixedBanana(0, 0)]
+  const spin = [0], held: Item[] = [null], prev: Vec2[] = []
+  const shield = [true]
+  const blocks: number[] = []
+  updateHazards(k, b, [], spin, held, prev, 0.05, { onShieldBlock: (i) => blocks.push(i) }, shield)
+  ok('Schild verhindert das Schleudern', spin[0] === 0 && blocks[0] === 0, `spin=${spin[0]}`)
+  ok('Schild ist danach verbraucht', shield[0] === false)
+  ok('Tempo bleibt beim Schild-Treffer erhalten', k[0].speed === 30)
+  ok('Banane verschwindet trotz Schild', !bananaVisible(b[0]))
+  // zweiter Treffer ohne Schild -> normales Schleudern
+  const b2 = [fixedBanana(0, 0)]
+  updateHazards(k, b2, [], spin, held, prev, 0.05, {}, shield)
+  ok('nach verbrauchtem Schild trifft es normal', spin[0] === SPIN_DURATION)
+}
+
+// --- rollFn bestimmt das Box-Item ---
+{
+  const k = [kart(0, 0)]
+  const boxes = [box(0, 0)]
+  const spin = [0], held: Item[] = [null], prev: Vec2[] = []
+  updateHazards(k, [], boxes, spin, held, prev, 0.05, {}, undefined, () => 'rocket')
+  ok('rollFn setzt das aufgenommene Item', held[0] === 'rocket', `held=${held[0]}`)
+}
+
+// --- rollItem: Verteilung je Platz (deterministisch, gleichverteiltes rnd) ---
+{
+  // rnd durchläuft [0,1) in feinen Schritten -> exakte Wahrscheinlichkeits-Anteile
+  const dist = (rank: number, total: number) => {
+    const c: Record<HeldItem, number> = { banana: 0, rocket: 0, shield: 0 }
+    const N = 10000
+    for (let i = 0; i < N; i++) c[rollItem(rank, total, () => (i + 0.5) / N)]++
+    return { banana: c.banana / N, rocket: c.rocket / N, shield: c.shield / N }
+  }
+  const front = dist(1, 4) // Führender
+  const back = dist(4, 4) // Letzter
+  ok('vorne dominiert die Banane', front.banana > 0.75, `banana=${front.banana}`)
+  ok('vorne kaum Raketen', front.rocket < 0.15, `rocket=${front.rocket}`)
+  ok('hinten viel mehr Raketen als vorne', back.rocket > front.rocket + 0.3, `${front.rocket}->${back.rocket}`)
+  ok('hinten dominiert nicht mehr die Banane', back.banana < 0.2, `banana=${back.banana}`)
+  ok('Schild-Anteil steigt nach hinten', back.shield > front.shield, `${front.shield}->${back.shield}`)
+  // Einzelrennen (total=1) darf nicht durch 0 teilen
+  const solo = rollItem(1, 1, () => 0.99)
+  ok('total=1 liefert ein gueltiges Item', solo === 'banana', `solo=${solo}`)
 }
 
 console.log(fails ? `\n${fails} FEHLER` : '\nAlle Tests bestanden')

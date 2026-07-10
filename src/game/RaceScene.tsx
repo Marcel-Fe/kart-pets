@@ -13,7 +13,17 @@ import { sfx } from '../audio/sfx'
 import { AI_STYLES } from '../data/pets'
 import type { Pet, RaceResult, RaceResultEntry } from '../types'
 import type { TrackDef } from '../data/tracks'
-import { updateHazards, spinAngle, dropBanana, bananaVisible, type Banana, type ItemBox, type Item } from './hazards'
+import {
+  updateHazards,
+  spinAngle,
+  dropBanana,
+  bananaVisible,
+  rollItem,
+  ROCKET_BOOST_TIME,
+  type Banana,
+  type ItemBox,
+  type Item,
+} from './hazards'
 import {
   updatePlayer,
   updateAI,
@@ -158,6 +168,9 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
 
   // Restliche Schleuder-Zeit je Kart (Index wie `karts`) – bewusst NICHT im KartState.
   const spin = useRef<number[]>([])
+  // Schild aktiv je Kart (fängt den nächsten Treffer ab) – ebenfalls lokal.
+  const shield = useRef<boolean[]>([])
+  const shieldRefs = useRef<(THREE.Mesh | null)[]>([])
   // Gehaltenes Item je Kart, ebenfalls außerhalb der Fahrphysik.
   const held = useMemo<Item[]>(() => karts.map(() => null), [karts])
   const prevUse = useRef(false) // Flanke des Item-Knopfs
@@ -252,42 +265,76 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         ;(window as unknown as { __playerLateral?: number }).__playerLateral = onTrack.lateral
       }
 
-      // Spieler legt eine Banane ab (Flanke: einmal je Knopfdruck)
-      if (controls.useItem && !prevUse.current && held[0] === 'banana' && dropBanana(player, bananas)) {
-        held[0] = null
-        sfx.click()
+      // Ein gehaltenes Item einsetzen: Banane ablegen, Rakete zünden (Schub +
+      // Einmal-Immunität) oder Schild aktivieren. Gemeinsam für Spieler und KI.
+      const useHeldItem = (k: number) => {
+        const it = held[k]
+        if (!it) return
+        const kart = karts[k]
+        if (it === 'banana') {
+          if (!dropBanana(kart, bananas)) return // kein Ablage-Platz frei -> später erneut
+        } else if (it === 'rocket') {
+          kart.boostTime = Math.max(kart.boostTime, ROCKET_BOOST_TIME)
+          shield.current[k] = true // kurze Immunität während des Schubs
+        } else if (it === 'shield') {
+          shield.current[k] = true
+        }
+        held[k] = null
+        if (kart.isPlayer) (it === 'rocket' ? sfx.boost() : sfx.click())
       }
+
+      // Spieler setzt sein Item ein (Flanke: einmal je Knopfdruck)
+      if (controls.useItem && !prevUse.current && held[0]) useHeldItem(0)
       prevUse.current = controls.useItem
 
-      // Gegner nutzen ihre Bananen ebenfalls – kurz nachdem sie eine haben.
+      // Gegner nutzen ihr Item ebenfalls – kurz nachdem sie eins haben.
       for (let i = 1; i < karts.length; i++) {
         if (!held[i]) continue
         aiDropTimer[i] -= dt
         if (aiDropTimer[i] <= 0) {
-          if (dropBanana(karts[i], bananas)) held[i] = null
+          useHeldItem(i)
           aiDropTimer[i] = 1 + Math.random() * 3
         }
       }
 
-      // Bananen + Item-Boxen (getestete Logik in hazards.ts)
-      updateHazards(karts, bananas, boxes, spin.current, held, prevPos.current, dt, {
-        onHit: (k) => {
-          if (karts[k].isPlayer) sfx.spinOut()
-          if (import.meta.env.DEV) {
-            const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
-            w.__bananaHits = (w.__bananaHits ?? 0) + 1
-            if (karts[k].isPlayer) w.__playerSpins = (w.__playerSpins ?? 0) + 1
-          }
+      // Bananen + Item-Boxen (getestete Logik in hazards.ts). Das Box-Item hängt
+      // vom aktuellen Platz ab (Aufhol-Hilfe hinten), der Schild-Zustand fängt Treffer ab.
+      updateHazards(
+        karts,
+        bananas,
+        boxes,
+        spin.current,
+        held,
+        prevPos.current,
+        dt,
+        {
+          onHit: (k) => {
+            if (karts[k].isPlayer) sfx.spinOut()
+            if (import.meta.env.DEV) {
+              const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
+              w.__bananaHits = (w.__bananaHits ?? 0) + 1
+              if (karts[k].isPlayer) w.__playerSpins = (w.__playerSpins ?? 0) + 1
+            }
+          },
+          onPickup: (k) => {
+            if (karts[k].isPlayer) sfx.coin()
+            if (import.meta.env.DEV) {
+              const w = window as unknown as { __pickups?: number; __playerPickups?: number }
+              w.__pickups = (w.__pickups ?? 0) + 1
+              if (karts[k].isPlayer) w.__playerPickups = (w.__playerPickups ?? 0) + 1
+            }
+          },
+          onShieldBlock: (k) => {
+            if (karts[k].isPlayer) sfx.click()
+            if (import.meta.env.DEV) {
+              const w = window as unknown as { __shieldBlocks?: number }
+              w.__shieldBlocks = (w.__shieldBlocks ?? 0) + 1
+            }
+          },
         },
-        onPickup: (k) => {
-          if (karts[k].isPlayer) sfx.coin()
-          if (import.meta.env.DEV) {
-            const w = window as unknown as { __pickups?: number; __playerPickups?: number }
-            w.__pickups = (w.__pickups ?? 0) + 1
-            if (karts[k].isPlayer) w.__playerPickups = (w.__playerPickups ?? 0) + 1
-          }
-        },
-      })
+        shield.current,
+        (k) => rollItem(karts[k].rank, karts.length, Math.random),
+      )
 
       // Sichtbarkeit von Bananen und Boxen nachziehen
       for (let i = 0; i < bananas.length; i++) {
@@ -360,6 +407,17 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       // Karosserie-Neigung beim Drift (innere Gruppe rollt um die Längsachse)
       const inner = g.children[0]
       if (inner) inner.rotation.z = -k.visualTilt
+    }
+
+    // Schild-Blase je Kart nachziehen (nur sichtbar, wenn ein Schild aktiv ist)
+    for (let i = 0; i < karts.length; i++) {
+      const sm = shieldRefs.current[i]
+      if (!sm) continue
+      sm.visible = !!shield.current[i]
+      if (sm.visible) {
+        sm.position.set(karts[i].x, 1.2, karts[i].z)
+        sm.rotation.y += dt * 2
+      }
     }
 
     // Kamera: im Intro 360°-Umkreisung, danach Verfolgung
@@ -507,6 +565,21 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
           />
         ))}
       </Suspense>
+      {/* Schild-Blasen (eine je Kart, meist unsichtbar) */}
+      {karts.map((_, i) => (
+        <mesh key={'sh' + i} ref={(el) => { shieldRefs.current[i] = el }} visible={false}>
+          <sphereGeometry args={[2.4, 16, 12]} />
+          <meshStandardMaterial
+            color="#7cd0ff"
+            emissive="#39a9ff"
+            emissiveIntensity={0.6}
+            transparent
+            opacity={0.22}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+
       {/* Sammelbare Münzen */}
       {coins.map((c, i) => (
         <mesh key={i} ref={(el) => { coinRefs.current[i] = el }} position={[c.x, 1.3, c.z]}>
