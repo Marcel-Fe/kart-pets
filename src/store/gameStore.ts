@@ -6,6 +6,7 @@ import { costFor, type UpgradeArea } from '../data/upgrades'
 import { getDailyTask } from '../data/dailyTasks'
 import { findShopItem, buyStatus, applyPurchase } from '../data/shop'
 import { STORE_LIVE } from '../data/storeConfig'
+import { designById, designStatus, DEFAULT_DESIGN_ID } from '../data/kartDesigns'
 import { PETS } from '../data/pets'
 import { CUP_TRACKS, CUP_POINTS, petIdFromEntry } from '../data/cup'
 import {
@@ -35,6 +36,8 @@ interface GameState {
   upgrades: Record<string, number> // Bereich -> gekaufte Stufe
   ownedPets: string[]
   ownedCosmetics: string[] // gekaufte Kosmetik (Skins/Designs/Pass)
+  ownedDesigns: string[] // gekaufte Kart-Lackierungen
+  selectedDesign: string // aktive Kart-Lackierung
   dailyProgress: Record<string, number> // metric -> Fortschritt heute
   claimedTasks: string[]
   dailyDate: string
@@ -59,6 +62,8 @@ interface GameState {
   selectTrack: (id: string) => void
   buyUpgrade: (area: UpgradeArea) => void
   buyShopItem: (id: string) => void
+  buyDesign: (id: string) => void
+  selectDesign: (id: string) => void
   finishRace: (result: RaceResult) => void
   refreshDaily: () => void
   claimTask: (id: string) => void
@@ -85,6 +90,8 @@ export const useGameStore = create<GameState>()(
       upgrades: {},
       ownedPets: CORE_PET_IDS,
       ownedCosmetics: [],
+      ownedDesigns: [DEFAULT_DESIGN_ID],
+      selectedDesign: DEFAULT_DESIGN_ID,
       dailyProgress: {},
       claimedTasks: [],
       dailyDate: today(),
@@ -127,6 +134,25 @@ export const useGameStore = create<GameState>()(
           if (buyStatus(item, wallet, STORE_LIVE) !== 'ok') return state
           const next = applyPurchase(item, wallet)
           return { coins: next.coins, diamonds: next.diamonds, ownedCosmetics: next.ownedCosmetics }
+        }),
+      // Kart-Lackierung kaufen (Münzen) und direkt aktivieren.
+      buyDesign: (id) =>
+        set((state) => {
+          const design = designById(id)
+          const owned = state.ownedDesigns ?? [DEFAULT_DESIGN_ID]
+          if (designStatus(design, state.coins, owned) !== 'buyable') return state
+          return {
+            coins: state.coins - design.price,
+            ownedDesigns: [...owned, design.id],
+            selectedDesign: design.id,
+          }
+        }),
+      // Bereits besessene Lackierung auswählen.
+      selectDesign: (id) =>
+        set((state) => {
+          const owned = state.ownedDesigns ?? [DEFAULT_DESIGN_ID]
+          if (designStatus(designById(id), state.coins, owned) !== 'owned') return state
+          return { selectedDesign: id }
         }),
       finishRace: (result) =>
         set((state) => {
@@ -278,6 +304,8 @@ export const useGameStore = create<GameState>()(
         upgrades: state.upgrades,
         ownedPets: state.ownedPets,
         ownedCosmetics: state.ownedCosmetics,
+        ownedDesigns: state.ownedDesigns,
+        selectedDesign: state.selectedDesign,
         dailyProgress: state.dailyProgress,
         claimedTasks: state.claimedTasks,
         dailyDate: state.dailyDate,

@@ -10,6 +10,7 @@ import { PETS, getPet } from '../data/pets'
 import { getTrack } from '../data/tracks'
 import { levelFromXp } from '../data/progression'
 import { effectFor } from '../data/upgrades'
+import { designById } from '../data/kartDesigns'
 
 export function RaceScreen() {
   const selectedPetId = useGameStore((s) => s.selectedPetId)
@@ -17,6 +18,8 @@ export function RaceScreen() {
   const petXp = useGameStore((s) => s.petXp)
   const upgrades = useGameStore((s) => s.upgrades)
   const finishRace = useGameStore((s) => s.finishRace)
+  const selectedDesign = useGameStore((s) => s.selectedDesign)
+  const design = designById(selectedDesign)
 
   const playerPet = getPet(selectedPetId)
   const playerLevel = levelFromXp(petXp[selectedPetId] ?? 0).level
@@ -82,6 +85,7 @@ export function RaceScreen() {
           playerUpgrades={playerUpgrades}
           opponents={opponents}
           onFinish={finishRace}
+          playerDesign={{ body: design.body, chassis: design.chassis }}
         />
       </Canvas>
       <Hud />

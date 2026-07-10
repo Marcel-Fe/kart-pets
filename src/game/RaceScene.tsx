@@ -55,6 +55,7 @@ interface Props {
   playerUpgrades: UpgradeFactors
   opponents: Pet[]
   onFinish: (r: RaceResult) => void
+  playerDesign?: { body: string; chassis: string } // Kart-Lackierung des Spielers
 }
 
 const LANES = [-4.5, -1.5, 1.5, 4.5]
@@ -121,7 +122,7 @@ function Banana() {
   )
 }
 
-export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, opponents, onFinish }: Props) {
+export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, opponents, onFinish, playerDesign }: Props) {
   const { camera } = useThree()
   const curve = useMemo(() => new TrackCurve(track), [track])
 
@@ -636,6 +637,8 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
             model3d={k.pet.model3d}
             model3dRot={k.pet.model3dRot}
             kart={k}
+            bodyColor={k.isPlayer ? playerDesign?.body : undefined}
+            chassisColor={k.isPlayer ? playerDesign?.chassis : undefined}
           />
         ))}
       </Suspense>

@@ -8,13 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npm run test:hazards && npm run test:tracks && npm run test:kartvisual && npm run test:career && npm run test:cheer && npm run test:shop",
+    "test": "npm run test:hazards && npm run test:tracks && npm run test:kartvisual && npm run test:career && npm run test:cheer && npm run test:shop && npm run test:kartdesigns",
     "test:hazards": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-hazards.ts",
     "test:tracks": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-tracks.ts",
     "test:kartvisual": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-kartvisual.ts",
     "test:career": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-career.ts",
     "test:cheer": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-cheer.ts",
-    "test:shop": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-shop.ts"
+    "test:shop": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-shop.ts",
+    "test:kartdesigns": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-kartdesigns.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

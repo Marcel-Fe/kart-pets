@@ -4,6 +4,7 @@ import { StatBar } from '../ui/StatBar'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
+import { KART_DESIGNS, designStatus } from '../data/kartDesigns'
 
 type UpgradeDef = (typeof UPGRADES)[number]
 
@@ -19,6 +20,10 @@ export function Garage() {
   const buyUpgrade = useGameStore((s) => s.buyUpgrade)
   const setScreen = useGameStore((s) => s.setScreen)
   const selectedPetId = useGameStore((s) => s.selectedPetId)
+  const ownedDesigns = useGameStore((s) => s.ownedDesigns ?? [])
+  const selectedDesign = useGameStore((s) => s.selectedDesign)
+  const buyDesign = useGameStore((s) => s.buyDesign)
+  const selectDesign = useGameStore((s) => s.selectDesign)
 
   // Welches Upgrade gerade betrachtet wird -> hebt das Kart hervor.
   const [focus, setFocus] = useState<UpgradeDef | null>(null)
@@ -152,6 +157,51 @@ export function Garage() {
               >
                 {isMax ? '✓ MAX ausgebaut' : `Verbessern – 🪙 ${cost}`}
               </button>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Kart-Lackierungen (Kosmetik, im Rennen sichtbar) */}
+      <div className="section-head" style={{ width: '100%', maxWidth: 460, marginTop: 8 }}>
+        <h2>🎨 Lackierung</h2>
+      </div>
+      <p className="hint" style={{ width: '100%', maxWidth: 460 }}>
+        Rein optisch – im Rennen sichtbar. Kein Fahrvorteil.
+      </p>
+      <div className="shop-grid" style={{ width: '100%', maxWidth: 460 }}>
+        {KART_DESIGNS.map((d) => {
+          const status = designStatus(d, coins, ownedDesigns)
+          const active = d.id === selectedDesign
+          return (
+            <div key={d.id} className="shop-card" style={{ borderColor: active ? '#ffcf3f' : `${d.swatch[0]}66` }}>
+              <span
+                className="shop-emoji"
+                style={{
+                  background: `linear-gradient(135deg, ${d.swatch[0]} 50%, ${d.swatch[1] ?? d.swatch[0]} 50%)`,
+                }}
+              />
+              <div className="shop-name">{d.name}</div>
+              {status === 'owned' ? (
+                <button
+                  className="buy-btn shop-buy"
+                  style={{ background: active ? '#ffcf3f' : '#36e07a', color: active ? '#241800' : undefined }}
+                  disabled={active}
+                  onClick={() => selectDesign(d.id)}
+                >
+                  {active ? '✓ Aktiv' : 'Auswählen'}
+                </button>
+              ) : (
+                <button
+                  className="buy-btn shop-buy"
+                  style={{ background: d.swatch[0], opacity: status === 'buyable' ? 1 : 0.55 }}
+                  disabled={status !== 'buyable'}
+                  onClick={() => buyDesign(d.id)}
+                >
+                  🪙 {d.price}
+                </button>
+              )}
+              {status === 'insufficient' && <span className="shop-soon">zu wenig</span>}
             </div>
           )
         })}

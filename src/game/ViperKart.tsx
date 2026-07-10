@@ -7,7 +7,6 @@ import { RoundedBox } from '@react-three/drei'
 // `accent` (Pet-Farbe) tönt Spoiler & Nasenstreifen für Wiedererkennung.
 
 const ORANGE = '#ff7d1e'
-const ORANGE_DK = '#e85f12'
 const BLUE = '#2f6bd6'
 const GOLD = '#e8b23a'
 const TIRE = '#202127'
@@ -62,9 +61,21 @@ export interface KartParts {
   spin: (THREE.Group | null)[] // alle vier Räder
 }
 
-export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?: KartParts }) {
+export function ViperKart({
+  accent = ORANGE,
+  parts,
+  body = ORANGE,
+  chassis = BLUE,
+}: {
+  accent?: string
+  parts?: KartParts
+  body?: string // Lackierung Motorhaube/Nase (Kart-Design)
+  chassis?: string // Lackierung Bodenplatte/Seitenkästen (Kart-Design)
+}) {
   const setSteer = (i: number) => (o: THREE.Group | null) => { if (parts) parts.steer[i] = o }
   const setSpin = (i: number) => (o: THREE.Group | null) => { if (parts) parts.spin[i] = o }
+  // abgedunkelte Nasen-Variante der Body-Farbe (ersetzt das feste ORANGE_DK)
+  const bodyDark = useMemo(() => '#' + new THREE.Color(body).multiplyScalar(0.82).getHexString(), [body])
   // Klarlack-Akzent (Spoiler + Nasenstreifen): ein geteiltes Material, daher
   // günstig – der clearcoat-Layer läuft nur einmal, nicht je Mesh.
   const accentMat = useMemo(
@@ -81,18 +92,18 @@ export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?:
   )
   return (
     <group>
-      {/* Bodenplatte / Chassis (blau) – glänzender Lack, reflektiert die Environment-Map */}
+      {/* Bodenplatte / Chassis – glänzender Lack, reflektiert die Environment-Map */}
       <RoundedBox args={[1.7, 0.24, 3.0]} radius={0.11} smoothness={3} position={[0, 0.32, -0.1]} castShadow receiveShadow>
-        <meshStandardMaterial color={BLUE} roughness={0.28} metalness={0.35} envMapIntensity={1.1} />
+        <meshStandardMaterial color={chassis} roughness={0.28} metalness={0.35} envMapIntensity={1.1} />
       </RoundedBox>
 
-      {/* Hauptkarosserie / Motorhaube (orange) – Klarlack (clearcoat) für den Wow-Glanz */}
+      {/* Hauptkarosserie / Motorhaube – Klarlack (clearcoat) für den Wow-Glanz */}
       <RoundedBox args={[1.26, 0.5, 2.1]} radius={0.16} smoothness={4} position={[0, 0.62, 0.15]} castShadow>
-        <meshPhysicalMaterial color={ORANGE} roughness={0.28} metalness={0.05} clearcoat={1} clearcoatRoughness={0.08} envMapIntensity={1.1} />
+        <meshPhysicalMaterial color={body} roughness={0.28} metalness={0.05} clearcoat={1} clearcoatRoughness={0.08} envMapIntensity={1.1} />
       </RoundedBox>
       {/* abgeschrägte Nase vorn */}
       <RoundedBox args={[1.02, 0.36, 0.8]} radius={0.14} smoothness={4} position={[0, 0.54, 1.4]} castShadow>
-        <meshPhysicalMaterial color={ORANGE_DK} roughness={0.3} metalness={0.05} clearcoat={0.9} clearcoatRoughness={0.12} envMapIntensity={1.0} />
+        <meshPhysicalMaterial color={bodyDark} roughness={0.3} metalness={0.05} clearcoat={0.9} clearcoatRoughness={0.12} envMapIntensity={1.0} />
       </RoundedBox>
       {/* Nasenstreifen in Pet-Farbe */}
       <mesh position={[0, 0.75, 1.15]}>
@@ -103,7 +114,7 @@ export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?:
       {/* Seitenkästen (blau) */}
       {[-1, 1].map((s) => (
         <RoundedBox key={s} args={[0.36, 0.42, 1.9]} radius={0.12} smoothness={3} position={[s * 0.93, 0.5, 0.05]} castShadow>
-          <meshStandardMaterial color={BLUE} roughness={0.3} metalness={0.3} envMapIntensity={1.1} />
+          <meshStandardMaterial color={chassis} roughness={0.3} metalness={0.3} envMapIntensity={1.1} />
         </RoundedBox>
       ))}
 

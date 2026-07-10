@@ -19,6 +19,8 @@ interface Props {
   model3d?: string
   model3dRot?: [number, number, number]
   kart: KartState
+  bodyColor?: string // Kart-Design: Lackierung Motorhaube/Nase (nur Spieler)
+  chassisColor?: string // Kart-Design: Lackierung Chassis/Seitenkästen (nur Spieler)
 }
 
 const SPARK_LOW = new THREE.Color('#ffae3f')
@@ -59,7 +61,7 @@ function RacePet({ url, rot }: { url: string; rot?: [number, number, number] }) 
 
 // Lädt ein echtes GLB-Kart-Modell (Kenney Car Kit, CC0) und ergänzt
 // Effekte: Boost-Flamme, Drift-Funken, Unterboden-Glow in Pet-Farbe.
-export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model3d, model3dRot, kart }, ref) => {
+export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model3d, model3dRot, kart, bodyColor, chassisColor }, ref) => {
   // Fahrer sind echt 3D: eigenes GLB falls vorhanden, sonst die gebaute PetFigure.
   const KART_SCALE = 1.15
   const seat = KART_SEAT
@@ -222,9 +224,10 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
       <group>
         {/* Federung: das ganze Kart nickt beim Bremsen und wankt in der Kurve. */}
         <group ref={bodyRef}>
-          {/* Selbstgebautes Viper-Kart (orange/blau), Nase in Fahrtrichtung */}
+          {/* Selbstgebautes Viper-Kart, Nase in Fahrtrichtung. Kart-Design (nur
+              Spieler) überschreibt die Grundfarben, sonst Standard-Lackierung. */}
           <group scale={KART_SCALE}>
-            <ViperKart accent={color} parts={parts} />
+            <ViperKart accent={color} parts={parts} body={bodyColor} chassis={chassisColor} />
           </group>
         </group>
         {model3d ? (
