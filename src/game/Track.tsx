@@ -6,6 +6,7 @@ import { TrackCurve } from './trackCurve'
 import type { TrackTheme } from '../data/tracks'
 import { ROAD_WIDTH } from '../data/tracks'
 import { makeGroundTexture, makeRoadTexture, makeKerbTexture } from './textures'
+import { Scatter, type Deco } from './Scatter'
 
 interface Props {
   curve: TrackCurve
@@ -29,14 +30,6 @@ function useWind(): SwayFn {
   return (o, ph, amp) => {
     if (o) reg.current.set(o.uuid, { o, ph, amp })
   }
-}
-
-interface Deco {
-  x: number
-  z: number
-  s: number
-  rot: number
-  variant: number
 }
 
 function useScatter(curve: TrackCurve): Deco[] {
@@ -76,204 +69,6 @@ const HILL_COLOR: Record<string, string> = {
   ice: '#bfe2f5',
 }
 
-const CANDY_COLORS = ['#ff5db0', '#8f6bff', '#3fc1ff', '#ffd23f', '#5be08a']
-
-function DecoItem({ d, decor, sway }: { d: Deco; decor: string; sway: SwayFn }) {
-  if (decor === 'forest') {
-    const greens = ['#1d7a3a', '#268f45', '#2f9e54', '#176b33']
-    const g = greens[Math.abs(Math.round(d.x * 1.7 + d.z)) % greens.length]
-    const g2 = greens[Math.abs(Math.round(d.x + d.z * 1.3)) % greens.length]
-    const ph = d.x * 0.6 + d.z * 0.4
-    if (d.variant === 0)
-      // hohe, volle Tanne (4 Kegel-Schichten) – wiegt sich im Wind
-      return (
-        <group ref={(o) => sway(o, ph, 0.06)} position={[d.x, 0, d.z]} scale={d.s} rotation={[0, d.rot, 0]}>
-          <mesh position={[0, 1.1, 0]} castShadow>
-            <cylinderGeometry args={[0.3, 0.42, 2.2, 7]} />
-            <meshStandardMaterial color="#5e4128" />
-          </mesh>
-          <mesh position={[0, 2.4, 0]} castShadow>
-            <coneGeometry args={[1.8, 2.8, 9]} />
-            <meshStandardMaterial color={g} roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 3.6, 0]} castShadow>
-            <coneGeometry args={[1.4, 2.4, 9]} />
-            <meshStandardMaterial color={g2} roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 4.7, 0]} castShadow>
-            <coneGeometry args={[1.0, 2.0, 9]} />
-            <meshStandardMaterial color={g} roughness={0.9} />
-          </mesh>
-        </group>
-      )
-    if (d.variant === 1)
-      // runder Laubbaum (Stamm + büschelige Krone) – wiegt sich im Wind
-      return (
-        <group ref={(o) => sway(o, ph, 0.08)} position={[d.x, 0, d.z]} scale={d.s}>
-          <mesh position={[0, 1.0, 0]} castShadow>
-            <cylinderGeometry args={[0.26, 0.36, 2.0, 7]} />
-            <meshStandardMaterial color="#6b4a2b" />
-          </mesh>
-          <mesh position={[0, 2.6, 0]} castShadow>
-            <sphereGeometry args={[1.35, 12, 11]} />
-            <meshStandardMaterial color={g} roughness={1} />
-          </mesh>
-          <mesh position={[0.7, 2.1, 0.3]} castShadow>
-            <sphereGeometry args={[0.85, 10, 9]} />
-            <meshStandardMaterial color={g2} roughness={1} />
-          </mesh>
-          <mesh position={[-0.6, 2.2, -0.3]} castShadow>
-            <sphereGeometry args={[0.8, 10, 9]} />
-            <meshStandardMaterial color={g2} roughness={1} />
-          </mesh>
-        </group>
-      )
-    // niedriger Busch (Bodenbewuchs) – nur an jedem 2. steht ein Fliegenpilz
-    const withMushroom = Math.abs(Math.round(d.x + d.z)) % 2 === 0
-    return (
-      <group ref={(o) => sway(o, ph, 0.07)} position={[d.x, 0, d.z]} scale={d.s}>
-        <mesh position={[0, 0.5, 0]} castShadow>
-          <sphereGeometry args={[0.7, 10, 8]} />
-          <meshStandardMaterial color={g} roughness={1} />
-        </mesh>
-        {withMushroom && (
-          <>
-            <mesh position={[0.6, 0.28, 0.25]}>
-              <cylinderGeometry args={[0.09, 0.12, 0.55, 7]} />
-              <meshStandardMaterial color="#f3ead6" roughness={0.8} />
-            </mesh>
-            <mesh position={[0.6, 0.62, 0.25]} castShadow>
-              <sphereGeometry args={[0.28, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-              <meshStandardMaterial color="#d8362f" roughness={0.55} />
-            </mesh>
-          </>
-        )}
-      </group>
-    )
-  }
-
-  if (decor === 'candy') {
-    const col = CANDY_COLORS[(d.variant + Math.round(d.x)) % CANDY_COLORS.length]
-    if (d.variant === 0)
-      // Lutscher
-      return (
-        <group position={[d.x, 0, d.z]} scale={d.s}>
-          <mesh position={[0, 1.2, 0]}>
-            <cylinderGeometry args={[0.08, 0.08, 2.4, 8]} />
-            <meshStandardMaterial color="#ffffff" />
-          </mesh>
-          <mesh position={[0, 2.6, 0]} castShadow>
-            <sphereGeometry args={[0.7, 16, 16]} />
-            <meshStandardMaterial color={col} roughness={0.2} metalness={0.1} />
-          </mesh>
-        </group>
-      )
-    if (d.variant === 1)
-      // Gumdrop
-      return (
-        <mesh position={[d.x, 0.6 * d.s, d.z]} scale={d.s} castShadow>
-          <coneGeometry args={[0.9, 1.6, 16]} />
-          <meshStandardMaterial color={col} roughness={0.25} />
-        </mesh>
-      )
-    // Bonbon-Kugel
-    return (
-      <mesh position={[d.x, 0.8 * d.s, d.z]} scale={d.s} castShadow>
-        <sphereGeometry args={[0.8, 16, 16]} />
-        <meshStandardMaterial color={col} roughness={0.2} metalness={0.2} />
-      </mesh>
-    )
-  }
-
-  if (decor === 'volcano') {
-    if (d.variant === 0)
-      // Felsen
-      return (
-        <mesh position={[d.x, 0.6 * d.s, d.z]} scale={d.s} rotation={[d.rot, d.rot, 0]} castShadow>
-          <dodecahedronGeometry args={[1]} />
-          <meshStandardMaterial color="#4a423e" roughness={1} flatShading />
-        </mesh>
-      )
-    if (d.variant === 1)
-      // Lava-Pfütze
-      return (
-        <mesh position={[d.x, 0.07, d.z]} scale={d.s} rotation={[-Math.PI / 2, 0, d.rot]}>
-          <circleGeometry args={[1.4, 16]} />
-          <meshStandardMaterial color="#ff5a1f" emissive="#ff6a1f" emissiveIntensity={1.6} />
-        </mesh>
-      )
-    // Toter Baum
-    return (
-      <group position={[d.x, 0, d.z]} scale={d.s}>
-        <mesh position={[0, 1.4, 0]} castShadow>
-          <cylinderGeometry args={[0.18, 0.3, 2.8, 6]} />
-          <meshStandardMaterial color="#2a1c16" />
-        </mesh>
-      </group>
-    )
-  }
-
-  if (decor === 'ice') {
-    if (d.variant === 0)
-      // Eiskristall / Spitze
-      return (
-        <mesh position={[d.x, 1.1 * d.s, d.z]} scale={d.s} rotation={[0, d.rot, 0]} castShadow>
-          <coneGeometry args={[0.6, 2.6, 6]} />
-          <meshStandardMaterial color="#bfeaff" roughness={0.15} metalness={0.3} transparent opacity={0.92} />
-        </mesh>
-      )
-    if (d.variant === 1)
-      // Schneehügel
-      return (
-        <mesh position={[d.x, 0.3 * d.s, d.z]} scale={[d.s * 1.4, d.s * 0.8, d.s * 1.4]} castShadow>
-          <sphereGeometry args={[1, 16, 12]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.9} />
-        </mesh>
-      )
-    // verschneite Tanne
-    return (
-      <group position={[d.x, 0, d.z]} scale={d.s}>
-        <mesh position={[0, 1.1, 0]} castShadow>
-          <cylinderGeometry args={[0.28, 0.36, 2.2, 8]} />
-          <meshStandardMaterial color="#7a5638" />
-        </mesh>
-        <mesh position={[0, 2.8, 0]} castShadow>
-          <coneGeometry args={[1.4, 2.8, 10]} />
-          <meshStandardMaterial color="#e8f4ff" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 3.9, 0]} castShadow>
-          <coneGeometry args={[1, 1.8, 10]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.8} />
-        </mesh>
-      </group>
-    )
-  }
-
-  // city
-  if (d.variant === 2)
-    // Neon-Schild
-    return (
-      <mesh position={[d.x, 1.5 * d.s, d.z]} scale={d.s} castShadow>
-        <boxGeometry args={[0.4, 1.6, 0.4]} />
-        <meshStandardMaterial color="#ff2fa0" emissive="#ff2fa0" emissiveIntensity={1.4} />
-      </mesh>
-    )
-  // Hochhaus mit Neon-Kanten
-  const h = 6 + d.variant * 6 + d.s * 6
-  const neon = d.variant === 0 ? '#00e5ff' : '#b56bff'
-  return (
-    <group position={[d.x, 0, d.z]} scale={[d.s, 1, d.s]}>
-      <mesh position={[0, h / 2, 0]} castShadow>
-        <boxGeometry args={[5, h, 5]} />
-        <meshStandardMaterial color="#0e1330" />
-      </mesh>
-      <mesh position={[0, h / 2, 0]}>
-        <boxGeometry args={[5.1, h * 0.96, 5.1]} />
-        <meshStandardMaterial color={neon} emissive={neon} emissiveIntensity={1.1} wireframe />
-      </mesh>
-    </group>
-  )
-}
 
 interface PropDef {
   x: number
@@ -543,10 +338,8 @@ export function Track({ curve, theme }: Props) {
         </Float>
       ))}
 
-      {/* Theme-Dekoration */}
-      {scatter.map((d, i) => (
-        <DecoItem key={i} d={d} decor={theme.decor} sway={sway} />
-      ))}
+      {/* Theme-Dekoration: instanziert (ein Zeichenaufruf je Bauteil), Wind im Shader */}
+      <Scatter items={scatter} decor={theme.decor} />
 
       {/* Straßenrand-Details (Zaun, Laterne, Fass, Reifen, Pylone, Blumen) */}
       {roadside.map((p, i) => (
