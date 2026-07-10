@@ -4,7 +4,8 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { PETS } from '../data/pets'
 import { PetFigure } from './PetFigure'
-import { ViperKart, KART_SEAT } from './ViperKart'
+import { ViperKart, KART_SEAT, type KartParts } from './ViperKart'
+import { steerFromTilt, diveFromAccel } from './kartVisual'
 import { asset } from '../utils/asset'
 import type { KartState } from './raceSim'
 import type { EarType } from '../types'
@@ -63,6 +64,14 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
   const KART_SCALE = 1.15
   const seat = KART_SEAT
 
+  // Fahrdynamik: rein optisch, aus vorhandenen Werten abgeleitet (speed/heading).
+  // Die Fahrphysik (raceSim.ts) bleibt unberührt.
+  const bodyRef = useRef<THREE.Group>(null)
+  const parts = useMemo<KartParts>(() => ({ steer: [null, null], spin: [null, null, null, null] }), [])
+  const prevSpeed = useRef(0)
+  const dive = useRef(0) // Nickbewegung: >0 = Nase taucht ein
+  const steerVis = useRef(0) // geglätteter Lenkwinkel
+
   const flameRef = useRef<THREE.Mesh>(null)
   const coreRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
@@ -93,6 +102,44 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
 
   useFrame((_, delta) => {
     const t = performance.now() * 0.001
+    const dt = Math.max(1e-4, Math.min(delta, 0.05))
+
+    // --- Fahrdynamik ---
+    // Räder drehen sich mit dem Tempo (Umfangsgeschwindigkeit / Radius).
+    const spinRate = kart.speed / 0.46
+    for (const w of parts.spin) if (w) w.rotation.y -= spinRate * dt
+
+    // Lenkwinkel direkt aus der Karosserie-Neigung (visualTilt) ableiten – die
+    // trägt den Lenkeinschlag bereits (raceSim.applyCommon), bildraten-unabhängig.
+    const steerTarget = steerFromTilt(kart.visualTilt)
+    steerVis.current += (steerTarget - steerVis.current) * Math.min(1, dt * 12)
+    for (const w of parts.steer) if (w) w.rotation.y = steerVis.current
+
+    // Nicken: bremsen taucht die Nase, beschleunigen hebt sie. Ableitung über den
+    // ECHTEN Frame-Delta (nicht das auf 0.05 geklemmte dt), sonst wird die
+    // Beschleunigung im Software-Rendering vielfach überschätzt und klemmt.
+    const accel = (kart.speed - prevSpeed.current) / Math.max(1e-3, delta)
+    prevSpeed.current = kart.speed
+    const diveTarget = diveFromAccel(accel)
+    dive.current += (diveTarget - dive.current) * Math.min(1, dt * 8)
+
+    if (import.meta.env.DEV && kart.isPlayer) {
+      // Nur fuer automatisierte Tests: Rad- und Lenkstellung des Spielers.
+      const w = window as unknown as { __wheel?: number; __steer?: number; __dive?: number }
+      w.__wheel = parts.spin[0]?.rotation.y ?? 0
+      w.__steer = steerVis.current
+      w.__dive = dive.current
+    }
+
+    if (bodyRef.current) {
+      const b = bodyRef.current
+      b.rotation.x = dive.current
+      // Wanken: zusätzlich zum Drift-Neigen der äußeren Gruppe
+      b.rotation.z = -steerVis.current * 0.16
+      // leichtes Federn, stärker mit Tempo
+      b.position.y = Math.sin(t * 9 + kart.x * 0.3) * 0.012 * Math.min(1, kart.speed / 18)
+    }
+
     // Boost-Flamme (größer + heller beim Boost)
     const boosting = kart.boostTime > 0
     if (flameRef.current) {
@@ -173,9 +220,12 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
     <>
     <group ref={ref}>
       <group>
-        {/* Selbstgebautes Viper-Kart (orange/blau), Nase in Fahrtrichtung */}
-        <group scale={KART_SCALE}>
-          <ViperKart accent={color} />
+        {/* Federung: das ganze Kart nickt beim Bremsen und wankt in der Kurve. */}
+        <group ref={bodyRef}>
+          {/* Selbstgebautes Viper-Kart (orange/blau), Nase in Fahrtrichtung */}
+          <group scale={KART_SCALE}>
+            <ViperKart accent={color} parts={parts} />
+          </group>
         </group>
         {model3d ? (
           // Echtes 3D-Modell, falls vorhanden

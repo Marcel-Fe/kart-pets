@@ -24,6 +24,10 @@ export function resetControls() {
 
 // Tastatur für bequemes Testen am Desktop.
 export function attachKeyboard(): () => void {
+  if (import.meta.env.DEV) {
+    // Nur fuer automatisierte Tests: aktuelle Eingaben auslesbar machen.
+    ;(window as unknown as { __controls?: typeof controls }).__controls = controls
+  }
   const down = (e: KeyboardEvent) => set(e.code, true)
   const up = (e: KeyboardEvent) => set(e.code, false)
   window.addEventListener('keydown', down)

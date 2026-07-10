@@ -394,7 +394,9 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       // Boost-Gefühl: FOV kurz weiten (Schub) + minimales Wackeln – nur die Kamera,
       // Physik/Position bleibt unberührt (das Rauschen wird nächsten Frame weggelerpt).
       const cam = camera as THREE.PerspectiveCamera
-      const targetFov = 62 + (boosting ? 8 : 0)
+      // Blickfeld waechst mit dem Tempo (Geschwindigkeitsgefuehl) und springt beim Boost.
+      const speedFov = Math.min(6, (Math.abs(player.speed) / 30) * 6)
+      const targetFov = 62 + speedFov + (boosting ? 8 : 0)
       camFov.current += (targetFov - camFov.current) * Math.min(1, dt * 6)
       if (Math.abs(cam.fov - camFov.current) > 0.01) {
         cam.fov = camFov.current

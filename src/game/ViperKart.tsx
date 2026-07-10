@@ -15,28 +15,56 @@ const SEAT = '#1d1e24'
 
 export const KART_SEAT = new THREE.Vector3(0, 1.02, -0.35) // Sitzposition fürs Pet
 
-function Wheel({ x, z, r }: { x: number; z: number; r: number }) {
+// Ein Rad besteht aus zwei Gruppen: die äußere lenkt (Drehung um Y), die innere
+// dreht sich mit dem Tempo. So lassen sich beide Bewegungen unabhängig steuern.
+function Wheel({
+  x,
+  z,
+  r,
+  steerRef,
+  spinRef,
+}: {
+  x: number
+  z: number
+  r: number
+  steerRef?: (o: THREE.Group | null) => void
+  spinRef?: (o: THREE.Group | null) => void
+}) {
   return (
-    <group position={[x, r, z]} rotation={[0, 0, Math.PI / 2]}>
-      {/* Reifen */}
-      <mesh castShadow>
-        <cylinderGeometry args={[r, r, 0.34, 20]} />
-        <meshStandardMaterial color={TIRE} roughness={0.85} />
-      </mesh>
-      {/* goldene Felge außen */}
-      <mesh position={[0, 0.18, 0]}>
-        <cylinderGeometry args={[r * 0.62, r * 0.62, 0.06, 18]} />
-        <meshStandardMaterial color={GOLD} metalness={0.6} roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 0.2, 0]}>
-        <cylinderGeometry args={[r * 0.2, r * 0.2, 0.06, 12]} />
-        <meshStandardMaterial color="#3a2f16" metalness={0.5} roughness={0.4} />
-      </mesh>
+    <group position={[x, r, z]} ref={steerRef}>
+      <group rotation={[0, 0, Math.PI / 2]} ref={spinRef}>
+        {/* Reifen */}
+        <mesh castShadow>
+          <cylinderGeometry args={[r, r, 0.34, 20]} />
+          <meshStandardMaterial color={TIRE} roughness={0.85} />
+        </mesh>
+        {/* goldene Felge außen */}
+        <mesh position={[0, 0.18, 0]}>
+          <cylinderGeometry args={[r * 0.62, r * 0.62, 0.06, 18]} />
+          <meshStandardMaterial color={GOLD} metalness={0.6} roughness={0.35} />
+        </mesh>
+        {/* Speiche, damit man die Drehung sieht */}
+        <mesh position={[0, 0.21, 0]}>
+          <boxGeometry args={[r * 1.15, 0.03, 0.08]} />
+          <meshStandardMaterial color="#3a2f16" metalness={0.5} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]}>
+          <cylinderGeometry args={[r * 0.2, r * 0.2, 0.06, 12]} />
+          <meshStandardMaterial color="#3a2f16" metalness={0.5} roughness={0.4} />
+        </mesh>
+      </group>
     </group>
   )
 }
 
-export function ViperKart({ accent = ORANGE }: { accent?: string }) {
+export interface KartParts {
+  steer: (THREE.Group | null)[] // [vorne links, vorne rechts]
+  spin: (THREE.Group | null)[] // alle vier Räder
+}
+
+export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?: KartParts }) {
+  const setSteer = (i: number) => (o: THREE.Group | null) => { if (parts) parts.steer[i] = o }
+  const setSpin = (i: number) => (o: THREE.Group | null) => { if (parts) parts.spin[i] = o }
   const accentMat = useMemo(
     () => new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.1 }),
     [accent],
@@ -94,11 +122,11 @@ export function ViperKart({ accent = ORANGE }: { accent?: string }) {
         <primitive object={accentMat} attach="material" />
       </RoundedBox>
 
-      {/* Räder: vorne etwas kleiner */}
-      <Wheel x={-0.95} z={1.05} r={0.42} />
-      <Wheel x={0.95} z={1.05} r={0.42} />
-      <Wheel x={-1.0} z={-1.05} r={0.5} />
-      <Wheel x={1.0} z={-1.05} r={0.5} />
+      {/* Räder: vorne etwas kleiner und lenkbar */}
+      <Wheel x={-0.95} z={1.05} r={0.42} steerRef={setSteer(0)} spinRef={setSpin(0)} />
+      <Wheel x={0.95} z={1.05} r={0.42} steerRef={setSteer(1)} spinRef={setSpin(1)} />
+      <Wheel x={-1.0} z={-1.05} r={0.5} spinRef={setSpin(2)} />
+      <Wheel x={1.0} z={-1.05} r={0.5} spinRef={setSpin(3)} />
     </group>
   )
 }

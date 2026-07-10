@@ -8,9 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npm run test:hazards && npm run test:tracks",
+    "test": "npm run test:hazards && npm run test:tracks && npm run test:kartvisual",
     "test:hazards": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-hazards.ts",
-    "test:tracks": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-tracks.ts"
+    "test:tracks": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-tracks.ts",
+    "test:kartvisual": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-kartvisual.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
