@@ -65,24 +65,34 @@ export interface KartParts {
 export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?: KartParts }) {
   const setSteer = (i: number) => (o: THREE.Group | null) => { if (parts) parts.steer[i] = o }
   const setSpin = (i: number) => (o: THREE.Group | null) => { if (parts) parts.spin[i] = o }
+  // Klarlack-Akzent (Spoiler + Nasenstreifen): ein geteiltes Material, daher
+  // günstig – der clearcoat-Layer läuft nur einmal, nicht je Mesh.
   const accentMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.1 }),
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: accent,
+        roughness: 0.3,
+        metalness: 0.1,
+        clearcoat: 1,
+        clearcoatRoughness: 0.1,
+        envMapIntensity: 1.2,
+      }),
     [accent],
   )
   return (
     <group>
-      {/* Bodenplatte / Chassis (blau) */}
+      {/* Bodenplatte / Chassis (blau) – glänzender Lack, reflektiert die Environment-Map */}
       <RoundedBox args={[1.7, 0.24, 3.0]} radius={0.11} smoothness={3} position={[0, 0.32, -0.1]} castShadow receiveShadow>
-        <meshStandardMaterial color={BLUE} roughness={0.5} metalness={0.15} />
+        <meshStandardMaterial color={BLUE} roughness={0.28} metalness={0.35} envMapIntensity={1.1} />
       </RoundedBox>
 
-      {/* Hauptkarosserie / Motorhaube (orange) */}
+      {/* Hauptkarosserie / Motorhaube (orange) – Klarlack (clearcoat) für den Wow-Glanz */}
       <RoundedBox args={[1.26, 0.5, 2.1]} radius={0.16} smoothness={4} position={[0, 0.62, 0.15]} castShadow>
-        <meshStandardMaterial color={ORANGE} roughness={0.35} metalness={0.12} />
+        <meshPhysicalMaterial color={ORANGE} roughness={0.28} metalness={0.05} clearcoat={1} clearcoatRoughness={0.08} envMapIntensity={1.1} />
       </RoundedBox>
       {/* abgeschrägte Nase vorn */}
       <RoundedBox args={[1.02, 0.36, 0.8]} radius={0.14} smoothness={4} position={[0, 0.54, 1.4]} castShadow>
-        <meshStandardMaterial color={ORANGE_DK} roughness={0.4} />
+        <meshPhysicalMaterial color={ORANGE_DK} roughness={0.3} metalness={0.05} clearcoat={0.9} clearcoatRoughness={0.12} envMapIntensity={1.0} />
       </RoundedBox>
       {/* Nasenstreifen in Pet-Farbe */}
       <mesh position={[0, 0.75, 1.15]}>
@@ -93,7 +103,7 @@ export function ViperKart({ accent = ORANGE, parts }: { accent?: string; parts?:
       {/* Seitenkästen (blau) */}
       {[-1, 1].map((s) => (
         <RoundedBox key={s} args={[0.36, 0.42, 1.9]} radius={0.12} smoothness={3} position={[s * 0.93, 0.5, 0.05]} castShadow>
-          <meshStandardMaterial color={BLUE} roughness={0.45} />
+          <meshStandardMaterial color={BLUE} roughness={0.3} metalness={0.3} envMapIntensity={1.1} />
         </RoundedBox>
       ))}
 
