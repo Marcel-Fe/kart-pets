@@ -4,11 +4,13 @@ import type { EarType } from '../types'
 interface Props {
   earType: EarType
   color: string
+  /** Fahrer-Pose: Arme greifen nach vorn ans Lenkrad. */
+  driving?: boolean
 }
 
 // Erkennbare Cartoon-Tierfigur (ersetzt die generische Kenney-Figur).
 // Blickt nach +Z (Fahrtrichtung). Ohren + Schwanz sind auch von hinten sichtbar.
-export function PetFigure({ earType, color }: Props) {
+export function PetFigure({ earType, color, driving }: Props) {
   const base = new THREE.Color(color)
   const light = base.clone().lerp(new THREE.Color('#ffffff'), 0.55)
   const dark = base.clone().lerp(new THREE.Color('#000000'), 0.45)
@@ -61,9 +63,32 @@ export function PetFigure({ earType, color }: Props) {
         </group>
       ))}
 
+      {driving && <Arms color={color} light={light} />}
       <Ears earType={earType} color={color} light={light} dark={dark} />
       <Tail earType={earType} color={color} light={light} dark={dark} />
     </group>
+  )
+}
+
+// Arme greifen nach vorn ans Lenkrad. Die Kapsel liegt entlang +Y; die Drehung
+// um X (~90°) legt sie nach vorn (+Z), die Pfote sitzt am vorderen Ende.
+function Arms({ color, light }: { color: string; light: THREE.Color }) {
+  return (
+    <>
+      {[-1, 1].map((s) => (
+        <group key={s} position={[s * 0.32, -0.4, 0.12]} rotation={[Math.PI / 2 - 0.42, 0, s * 0.18]}>
+          <mesh castShadow>
+            <capsuleGeometry args={[0.085, 0.4, 6, 10]} />
+            <meshStandardMaterial color={color} roughness={0.6} />
+          </mesh>
+          {/* Pfote am Steuer */}
+          <mesh position={[0, 0.28, 0]} castShadow>
+            <sphereGeometry args={[0.11, 12, 12]} />
+            <meshStandardMaterial color={light} roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+    </>
   )
 }
 

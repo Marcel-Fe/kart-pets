@@ -1,7 +1,7 @@
 import { forwardRef, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
-import { useFrame, useLoader } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { PETS } from '../data/pets'
 import { PetFigure } from './PetFigure'
 import { ViperKart, KART_SEAT } from './ViperKart'
@@ -23,19 +23,6 @@ interface Props {
 const SPARK_LOW = new THREE.Color('#ffae3f')
 const SPARK_HIGH = new THREE.Color('#7fd0ff')
 const SMOKE_COUNT = 10 // Puffs im wiederverwendeten Pool
-
-// Ganzes gerendertes Kart als 2D-Sprite (2.5D-Look wie klassische Mobile-Racer) –
-// sieht aus wie auf den Bildern, statt Low-Poly-Modell + Primitiven-Figur.
-function RaceCharSprite({ url, height = 3.0, y = height * 0.46 }: { url: string; height?: number; y?: number }) {
-  const tex = useLoader(THREE.TextureLoader, asset(url))
-  tex.colorSpace = THREE.SRGBColorSpace
-  const aspect = tex.image ? tex.image.width / tex.image.height : 0.83
-  return (
-    <sprite position={[0, y, 0]} scale={[height * aspect, height, 1]}>
-      <spriteMaterial map={tex} transparent alphaTest={0.35} depthWrite={false} />
-    </sprite>
-  )
-}
 
 // Echtes 3D-Pet-GLB (Meshy/TripoSR): normalisiert Größe+Position (Box3) und richtet
 // es per Rotations-Offset in Fahrtrichtung (+Z) aus → man sieht den Rücken.
@@ -71,9 +58,8 @@ function RacePet({ url, rot }: { url: string; rot?: [number, number, number] }) 
 
 // Lädt ein echtes GLB-Kart-Modell (Kenney Car Kit, CC0) und ergänzt
 // Effekte: Boost-Flamme, Drift-Funken, Unterboden-Glow in Pet-Farbe.
-export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutImage, raceImage, model3d, model3dRot, kart }, ref) => {
-  // Priorität fürs Rennen: Rück-Sprite (bester Look, von hinten) > 3D-GLB > Frontal-Sprite.
-  const spriteUrl = raceImage ?? (model3d ? undefined : cutImage)
+export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model3d, model3dRot, kart }, ref) => {
+  // Fahrer sind echt 3D: eigenes GLB falls vorhanden, sonst die gebaute PetFigure.
   const KART_SCALE = 1.15
   const seat = KART_SEAT
 
@@ -191,18 +177,15 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, cutIm
         <group scale={KART_SCALE}>
           <ViperKart accent={color} />
         </group>
-        {spriteUrl ? (
-          // Pet als Rück-Sprite auf dem Sitz (von hinten sichtbar)
-          <group position={seatPos}>
-            <RaceCharSprite url={spriteUrl} height={2.4} y={1.0} />
-          </group>
-        ) : model3d ? (
+        {model3d ? (
+          // Echtes 3D-Modell, falls vorhanden
           <group position={seatPos} scale={1.8}>
             <RacePet url={model3d} rot={model3dRot} />
           </group>
         ) : (
-          <group position={seatPos} scale={1.6}>
-            <PetFigure earType={earType} color={color} />
+          // Sonst die aus Grundformen gebaute 3D-Figur in Fahrer-Pose
+          <group position={seatPos} scale={1.5}>
+            <PetFigure earType={earType} color={color} driving />
           </group>
         )}
       </group>
@@ -249,5 +232,5 @@ KartModel.displayName = 'KartModel'
 
 // Vorhandene Pet-3D-Modelle vorab laden (Kart ist jetzt selbstgebaut, kein GLB nötig).
 PETS.forEach((p) => {
-  if (p.model3d && !p.raceImage) useGLTF.preload(asset(p.model3d))
+  if (p.model3d) useGLTF.preload(asset(p.model3d))
 })
