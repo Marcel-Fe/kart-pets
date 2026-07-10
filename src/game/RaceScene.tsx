@@ -13,6 +13,7 @@ import { sfx } from '../audio/sfx'
 import { AI_STYLES } from '../data/pets'
 import type { Pet, RaceResult, RaceResultEntry } from '../types'
 import type { TrackDef } from '../data/tracks'
+import { updateHazards, spinAngle } from './hazards'
 import {
   updatePlayer,
   updateAI,
@@ -36,6 +37,9 @@ interface Props {
 
 const LANES = [-4.5, -1.5, 1.5, 4.5]
 const INTRO_DURATION = 3.2 // Sekunden 360°-Kamerafahrt vor dem Countdown
+
+// Während des Schleuderns wird jede Eingabe ignoriert.
+const NO_INPUT = { throttle: false, steerLeft: false, steerRight: false, drift: false, boost: false }
 
 function makeKart(
   pet: Pet,
@@ -79,6 +83,22 @@ function makeKart(
   }
 }
 
+// Banane: gebogener Torus-Bogen, flach liegend, mit dunklem Stiel.
+function Banana() {
+  return (
+    <group rotation={[-Math.PI / 2, 0, 0.6]}>
+      <mesh castShadow>
+        <torusGeometry args={[0.42, 0.14, 8, 14, 2.4]} />
+        <meshStandardMaterial color="#ffd93b" roughness={0.45} emissive="#8a6a00" emissiveIntensity={0.2} />
+      </mesh>
+      <mesh position={[0.42, 0, 0]} castShadow>
+        <sphereGeometry args={[0.13, 8, 8]} />
+        <meshStandardMaterial color="#7d5f18" roughness={0.75} />
+      </mesh>
+    </group>
+  )
+}
+
 export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, opponents, onFinish }: Props) {
   const { camera } = useThree()
   const curve = useMemo(() => new TrackCurve(track), [track])
@@ -105,6 +125,27 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const coinRefs = useRef<(THREE.Mesh | null)[]>([])
   const coinState = useMemo(() => coins.map(() => ({ got: false })), [coins])
   const coinsGot = useRef(0)
+
+  // Bananen liegen versetzt auf der Fahrbahn (links / Mitte / rechts) – ausweichbar.
+  const bananas = useMemo(() => {
+    const arr: { x: number; z: number }[] = []
+    const n = curve.samples.length
+    let k = 0
+    for (let i = 30; i < n; i += 37) {
+      const p = curve.samples[i]
+      const nor = curve.normals[i]
+      const lat = ((k % 3) - 1) * 3.6
+      arr.push({ x: p.x + nor.x * lat, z: p.z + nor.z * lat })
+      k++
+    }
+    return arr
+  }, [curve])
+  const bananaRefs = useRef<(THREE.Group | null)[]>([])
+  const bananaTimer = useMemo(() => bananas.map(() => 0), [bananas]) // >0 = eingesammelt, zählt runter
+  // Restliche Schleuder-Zeit je Kart (Index wie `karts`) – bewusst NICHT im KartState.
+  const spin = useRef<number[]>([])
+  // Position im vorigen Bild, für die überstrichene Trefferprüfung.
+  const prevPos = useRef<{ x: number; z: number }[]>([])
 
   const meshRefs = useRef<(THREE.Group | null)[]>([])
   const intro = useRef(INTRO_DURATION)
@@ -165,15 +206,19 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       // sobald DRIFT losgelassen wird und die Leiste geladen ist (Flanke, ein Frame).
       const autoBoost = !controls.drift && prevDrift.current && player.driftCharge > 0.25
       prevDrift.current = controls.drift
+      // Beim Schleudern ist die Steuerung weg – das Kart rutscht nur noch aus.
+      const playerSpinning = (spin.current[0] ?? 0) > 0
       updatePlayer(
         player,
-        {
-          throttle: (controls.throttle || controls.autoThrottle) && !controls.brake,
-          steerLeft: controls.steerLeft,
-          steerRight: controls.steerRight,
-          drift: controls.drift,
-          boost: controls.boost || autoBoost,
-        },
+        playerSpinning
+          ? NO_INPUT
+          : {
+              throttle: (controls.throttle || controls.autoThrottle) && !controls.brake,
+              steerLeft: controls.steerLeft,
+              steerRight: controls.steerRight,
+              drift: controls.drift,
+              boost: controls.boost || autoBoost,
+            },
         onTrack.lateral,
         dt,
       )
@@ -182,6 +227,21 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       for (let i = 1; i < karts.length; i++) {
         const proj = curve.project(karts[i].x, karts[i].z)
         updateAI(karts[i], curve, proj.lateral, dt)
+      }
+
+      // Bananen (getestete Logik in hazards.ts): Treffer, Schleudern, Wiederkehr
+      updateHazards(karts, bananas, spin.current, prevPos.current, bananaTimer, dt, (k) => {
+        if (karts[k].isPlayer) sfx.spinOut()
+        if (import.meta.env.DEV) {
+          const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
+          w.__bananaHits = (w.__bananaHits ?? 0) + 1
+          if (karts[k].isPlayer) w.__playerSpins = (w.__playerSpins ?? 0) + 1
+        }
+      })
+      // Sichtbarkeit der Bananen an die Countdown-Werte koppeln
+      for (let i = 0; i < bananas.length; i++) {
+        const g = bananaRefs.current[i]
+        if (g) g.visible = bananaTimer[i] <= 0
       }
 
       resolveCollisions(karts)
@@ -230,7 +290,9 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       if (!g) continue
       const k = karts[i]
       g.position.set(k.x, 0, k.z)
-      g.rotation.set(0, k.heading, 0)
+      // Beim Schleudern wirbelt NUR das Modell – die Fahrtrichtung bleibt,
+      // sonst würde das Kart in die Botanik lenken. Der Winkel läuft auf 0 aus.
+      g.rotation.set(0, k.heading + spinAngle(spin.current[i] ?? 0), 0)
       // Karosserie-Neigung beim Drift (innere Gruppe rollt um die Längsachse)
       const inner = g.children[0]
       if (inner) inner.rotation.z = -k.visualTilt
@@ -384,6 +446,13 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
           <torusGeometry args={[0.5, 0.18, 12, 20]} />
           <meshStandardMaterial color="#ffcf3f" emissive="#ffae1f" emissiveIntensity={0.7} metalness={0.6} roughness={0.3} />
         </mesh>
+      ))}
+
+      {/* Bananen: drüberfahren = schleudern */}
+      {bananas.map((b, i) => (
+        <group key={'b' + i} ref={(el) => { bananaRefs.current[i] = el }} position={[b.x, 0.34, b.z]}>
+          <Banana />
+        </group>
       ))}
 
       <EffectComposer enableNormalPass={false}>

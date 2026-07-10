@@ -328,6 +328,28 @@ export const sfx = {
     notes.forEach((f, i) => window.setTimeout(() => blip(f, 0.22, 'square', 0.16), i * 110))
   },
 
+  // --- Schleudern (Banane): absackender Ton + kurzes Rutsch-Rauschen ---
+  spinOut() {
+    blip(520, 0.5, 'sawtooth', 0.16, 90)
+    const c = ensure()
+    if (!c || !master) return
+    const t = c.currentTime
+    const src = c.createBufferSource()
+    src.buffer = noise(c)
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.setValueAtTime(2400, t)
+    bp.frequency.exponentialRampToValueAtTime(600, t + 0.45)
+    bp.Q.value = 3
+    const g = c.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.14, t + 0.03)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
+    src.connect(bp).connect(g).connect(master)
+    src.start(t)
+    src.stop(t + 0.55)
+  },
+
   // --- UI-Klick ---
   click() {
     blip(320, 0.05, 'square', 0.08)
