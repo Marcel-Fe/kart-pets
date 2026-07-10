@@ -645,13 +645,8 @@ body {
   right: 14px;
   bottom: calc(24px + env(safe-area-inset-bottom));
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-.tc-secondary {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 .tc-btn {
   pointer-events: auto;
@@ -671,9 +666,9 @@ body {
   transform: translateY(3px);
 }
 .tc-btn.steer {
-  width: 82px;
-  height: 82px;
-  font-size: 30px;
+  width: 96px;
+  height: 96px;
+  font-size: 34px;
   background: linear-gradient(180deg, rgba(58, 70, 140, 0.92), rgba(34, 42, 96, 0.92));
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -681,51 +676,52 @@ body {
 .tc-btn.steer:active {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
-.tc-btn.gas {
-  width: 104px;
-  height: 104px;
+/* Kleine Bremse – Gas läuft automatisch, das hier hält nur kurz an. */
+.tc-btn.brake {
+  width: 74px;
+  height: 60px;
+  font-size: 13px;
+  background: linear-gradient(180deg, rgba(70, 80, 120, 0.92), rgba(40, 48, 84, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+.tc-btn.brake:active { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.16); }
+
+/* Haupt-Knopf: DRIFT halten, Loslassen zündet den Boost. */
+.tc-btn.drift-main {
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
-  font-size: 20px;
-  background: radial-gradient(circle at 35% 28%, #7dffab, #1faa54 78%);
-  box-shadow: 0 7px 0 #15833e, 0 0 24px rgba(54, 224, 122, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: radial-gradient(circle at 35% 28%, #ffd47a, #ff7a1f 78%);
+  box-shadow: 0 7px 0 #b85c10, 0 0 22px rgba(255, 150, 50, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3);
 }
-.tc-btn.gas:active {
-  box-shadow: 0 3px 0 #15833e, 0 0 24px rgba(54, 224, 122, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+.tc-btn.drift-main:active {
+  box-shadow: 0 3px 0 #b85c10, 0 0 22px rgba(255, 150, 50, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.3);
 }
-.tc-btn.drift {
-  width: 86px;
-  height: 56px;
-  background: linear-gradient(180deg, #ffc23f, #ff7a1f);
-  box-shadow: 0 5px 0 #b85c10, inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  font-size: 15px;
+.tc-drift-word { font-size: 22px; line-height: 1; }
+.tc-drift-hint {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  opacity: 0.85;
 }
-.tc-btn.drift:active { box-shadow: 0 2px 0 #b85c10, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-.tc-btn.boost {
-  width: 86px;
-  height: 56px;
-  background: linear-gradient(180deg, #9a7bff, #5b3fff);
-  box-shadow: 0 5px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  font-size: 15px;
-}
-.tc-btn.boost:active { box-shadow: 0 2px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-/* Boost noch nicht geladen: gedämpft + „gesperrt"-Hinweis (erst driften) */
-.tc-btn.boost.dim {
-  filter: grayscale(0.6) brightness(0.6);
-  opacity: 0.55;
-}
-/* Boost feuerbereit: leuchtet und pulsiert, damit man weiß WANN es geht */
-.tc-btn.boost.ready {
-  filter: brightness(1.12);
-  box-shadow: 0 5px 0 #3f2ba8, inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 0 18px 3px rgba(154, 123, 255, 0.85);
-  animation: boost-ready-pulse 0.8s ease-in-out infinite;
+/* Leiste geladen: leuchtet violett + pulsiert = JETZT loslassen für den Boost. */
+.tc-btn.drift-main.ready {
+  background: radial-gradient(circle at 35% 28%, #cbb4ff, #6b47ff 78%);
+  box-shadow: 0 7px 0 #3f2ba8, 0 0 26px 5px rgba(154, 123, 255, 0.9), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  animation: boost-ready-pulse 0.7s ease-in-out infinite;
 }
 @keyframes boost-ready-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.06); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tc-btn.boost.ready { animation: none; }
+  .tc-btn.drift-main.ready { animation: none; }
 }
 
 /* ---------- Result ---------- */

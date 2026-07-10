@@ -6,6 +6,9 @@ export const controls = {
   steerRight: false,
   drift: false,
   boost: false,
+  // Handy-freundlich: Kart gibt selbst Gas, `brake` hält es kurz an.
+  autoThrottle: false,
+  brake: false,
 }
 
 export function resetControls() {
@@ -14,6 +17,7 @@ export function resetControls() {
   controls.steerRight = false
   controls.drift = false
   controls.boost = false
+  controls.brake = false
 }
 
 // Tastatur für bequemes Testen am Desktop.
@@ -41,6 +45,10 @@ function set(code: string, v: boolean) {
     case 'ArrowRight':
     case 'KeyD':
       controls.steerRight = v
+      break
+    case 'ArrowDown':
+    case 'KeyS':
+      controls.brake = v
       break
     case 'Space':
       controls.drift = v

@@ -1,7 +1,7 @@
 import { controls } from '../game/controls'
 import { useHudStore } from '../store/hudStore'
 
-type Key = 'steerLeft' | 'steerRight' | 'throttle' | 'drift' | 'boost'
+type Key = 'steerLeft' | 'steerRight' | 'drift' | 'brake'
 
 function hold(key: Key) {
   // pointer-events: gedrückt halten = true, loslassen = false
@@ -16,9 +16,10 @@ function hold(key: Key) {
   }
 }
 
+// Handy-freundlich: Gas läuft automatisch, Boost zündet beim Loslassen des Drifts.
+// Damit braucht es nur zwei Daumen: links lenken, rechts driften.
 export function TouchControls() {
-  // Boost feuert erst ab geladener Leiste (>0.25). Knopf zeigt das an:
-  // dunkel = noch laden (erst driften), leuchtend = feuerbereit.
+  // Leiste geladen -> Loslassen feuert den Boost. Der Knopf zeigt das durch Leuchten.
   const boostReady = useHudStore((s) => s.boostCharge) >= 0.25
 
   return (
@@ -32,16 +33,16 @@ export function TouchControls() {
         </button>
       </div>
       <div className="touch-right">
-        <div className="tc-secondary">
-          <button className="tc-btn drift" {...hold('drift')}>
-            DRIFT
-          </button>
-          <button className={'tc-btn boost' + (boostReady ? ' ready' : ' dim')} {...hold('boost')}>
-            BOOST
-          </button>
-        </div>
-        <button className="tc-btn gas" {...hold('throttle')}>
-          GAS
+        <button className="tc-btn brake" {...hold('brake')} aria-label="Bremsen">
+          BREMSE
+        </button>
+        <button
+          className={'tc-btn drift-main' + (boostReady ? ' ready' : '')}
+          {...hold('drift')}
+          aria-label="Driften – loslassen zündet den Boost"
+        >
+          <span className="tc-drift-word">DRIFT</span>
+          <span className="tc-drift-hint">{boostReady ? 'LOSLASSEN!' : 'halten'}</span>
         </button>
       </div>
     </div>

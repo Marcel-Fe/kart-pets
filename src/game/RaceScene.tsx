@@ -114,6 +114,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const hudTimer = useRef(0)
   const camInit = useRef(false)
   const camFov = useRef(62) // geglättetes FOV für den Boost-Kick
+  const prevDrift = useRef(false) // Flanken-Erkennung: Drift losgelassen -> Auto-Boost
   const setHud = useHudStore((s) => s.set)
 
   // --- Sound-Zustand (Flanken-Erkennung) ---
@@ -160,14 +161,18 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
     if (racing) {
       // Spieler
       const onTrack = curve.project(player.x, player.z)
+      // Handy-freundlich: Auto-Gas (Bremse hebt es auf) und Boost feuert von selbst,
+      // sobald DRIFT losgelassen wird und die Leiste geladen ist (Flanke, ein Frame).
+      const autoBoost = !controls.drift && prevDrift.current && player.driftCharge > 0.25
+      prevDrift.current = controls.drift
       updatePlayer(
         player,
         {
-          throttle: controls.throttle,
+          throttle: (controls.throttle || controls.autoThrottle) && !controls.brake,
           steerLeft: controls.steerLeft,
           steerRight: controls.steerRight,
           drift: controls.drift,
-          boost: controls.boost,
+          boost: controls.boost || autoBoost,
         },
         onTrack.lateral,
         dt,

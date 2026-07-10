@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { RaceScene } from '../game/RaceScene'
 import { Hud } from '../ui/Hud'
 import { TouchControls } from '../ui/TouchControls'
-import { attachKeyboard, resetControls } from '../game/controls'
+import { attachKeyboard, resetControls, controls } from '../game/controls'
 import { useGameStore } from '../store/gameStore'
 import { useHudStore } from '../store/hudStore'
 import { PETS, getPet } from '../data/pets'
@@ -36,11 +36,13 @@ export function RaceScreen() {
 
   useEffect(() => {
     resetControls()
+    controls.autoThrottle = true // Kart gibt selbst Gas – Daumen frei fürs Lenken
     useHudStore.getState().set({ countdown: -1, lap: 1, totalLaps: track.laps })
     const detach = attachKeyboard()
     return () => {
       detach()
       resetControls()
+      controls.autoThrottle = false
     }
   }, [track.laps])
 
