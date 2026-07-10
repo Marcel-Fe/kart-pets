@@ -15,6 +15,7 @@ export interface CareerChapter {
   id: string
   title: string
   blurb: string // Kapitel-Einleitung
+  victory: string // Drako-Reaktion, sobald alle Rennen des Kapitels bestanden sind
   requiredStars: number // so viele Gesamt-Sterne schalten das Kapitel frei
   races: CareerRace[]
 }
@@ -27,6 +28,7 @@ export const CAREER: CareerChapter[] = [
     id: 'ch1',
     title: 'Erste Runden',
     blurb: 'Niemand kennt Fynnox – noch nicht. Im Flüsterwald beginnt der Weg an die Spitze.',
+    victory: 'Drako lacht abfällig: „Anfängerglück. Der Wald ist was für Kinder – warte, bis es ernst wird."',
     requiredStars: 0,
     races: [
       { trackId: 'fluesterwald', goalPlace: 3, goalCoins: 6, intro: 'Dein allererstes Rennen. Zeig, dass du hierher gehörst.' },
@@ -38,6 +40,7 @@ export const CAREER: CareerChapter[] = [
     id: 'ch2',
     title: 'Zuckerrausch',
     blurb: 'Der erste Ruhm ruft. In der Bonbonwelt warten schnellere Gegner und süße Fallen.',
+    victory: 'Drako stutzt: „Du gewinnst tatsächlich weiter? Ein Zufall hält nicht ewig, Kleiner."',
     requiredStars: 4,
     races: [
       { trackId: 'candychaos', goalPlace: 3, goalCoins: 9, intro: 'Neues Terrain, klebrige Kurven. Ruhig bleiben.' },
@@ -49,6 +52,7 @@ export const CAREER: CareerChapter[] = [
     id: 'ch3',
     title: 'Feuertaufe',
     blurb: 'Jetzt wird es heiß. Auf den Vulkanpisten trennt sich die Spreu vom Weizen.',
+    victory: 'Drako knurrt und stößt Rauch aus: „Durchs Feuer – und immer noch da? Das … gefällt mir nicht."',
     requiredStars: 10,
     races: [
       { trackId: 'vulkanrasen', goalPlace: 3, goalCoins: 11, intro: 'Hitze, Asche, enge Ränge. Volle Konzentration.' },
@@ -60,6 +64,7 @@ export const CAREER: CareerChapter[] = [
     id: 'ch4',
     title: 'Gipfelsturm',
     blurb: 'Das große Finale: von den Eisgipfeln bis in die Neonstadt. Ein letzter Kampf um den Ruhm.',
+    victory: 'Drako senkt den Kopf: „Du hast es geschafft, Fynnox. Der Champion … bist jetzt du."',
     requiredStars: 16,
     races: [
       { trackId: 'gletschergleiter', goalPlace: 2, goalCoins: 12, intro: 'Eiskalt und schnell. Nur die Besten sind noch dabei.' },
@@ -104,6 +109,21 @@ export function chapterStars(chapter: CareerChapter, stars: Record<string, numbe
 export function chapterUnlocked(chapter: CareerChapter, stars: Record<string, number>): boolean {
   return totalStars(stars) >= chapter.requiredStars
 }
+
+/** Kapitel bestanden = jedes Rennen mit mindestens einem Stern beendet. */
+export function chapterComplete(chapter: CareerChapter, stars: Record<string, number>): boolean {
+  return chapter.races.every((_, i) => (stars[raceKey(chapter.id, i)] ?? 0) > 0)
+}
+
+/** Karriere abgeschlossen = alle Kapitel bestanden. */
+export function careerComplete(stars: Record<string, number>): boolean {
+  return CAREER.every((c) => chapterComplete(c, stars))
+}
+
+// Abschlusstext, wenn Fynnox die ganze Karriere gemeistert hat.
+export const CAREER_FINALE =
+  'Die ganze Werkstatt jubelt: Fynnox ist berühmt. Vom unbekannten Neuling zum Champion – ' +
+  'niemand lacht mehr, wenn dein Name fällt. 🏆'
 
 /** Ist dieses Rennen spielbar? Erstes Rennen frei, sonst braucht es ≥1 Stern im Vorgänger. */
 export function raceUnlocked(chapter: CareerChapter, raceIndex: number, stars: Record<string, number>): boolean {

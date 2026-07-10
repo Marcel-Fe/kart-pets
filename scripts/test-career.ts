@@ -7,6 +7,9 @@ import {
   raceUnlocked,
   raceKey,
   newlyUnlockedRewards,
+  chapterComplete,
+  careerComplete,
+  CAREER_FINALE,
   STAR_REWARDS,
   type CareerRace,
 } from '../src/data/career.ts'
@@ -37,6 +40,7 @@ const race: CareerRace = { trackId: 't', goalPlace: 2, goalCoins: 10, intro: '' 
   ok('12 Rennen insgesamt', totalRaces === 12, `${totalRaces}`)
   ok('maximal 36 Sterne', totalRaces * 3 === 36)
   ok('Kapitel 1 ist ohne Sterne frei', CAREER[0].requiredStars === 0)
+  ok('jedes Kapitel hat eine Drako-Reaktion', CAREER.every((c) => c.victory.length > 0))
   // requiredStars je Kapitel muss mit dem Vorgänger-Maximum erreichbar sein
   let cumulativeMax = 0
   let reachable = true
@@ -73,6 +77,26 @@ const race: CareerRace = { trackId: 't', goalPlace: 2, goalCoins: 10, intro: '' 
   // Reward-Pets müssen echte Nicht-Core-Pet-IDs sein
   const rewardPets = STAR_REWARDS.filter((r) => r.petId).map((r) => r.petId)
   ok('jeder Reward-Pet hat eine ID', rewardPets.every(Boolean), `${rewardPets}`)
+}
+
+// --- Kapitel-/Karriere-Abschluss (Story-Trigger) ---
+{
+  const none: Record<string, number> = {}
+  ok('leeres Kapitel ist nicht abgeschlossen', !chapterComplete(CAREER[0], none))
+  // Kapitel 1 mit je 1 Stern in allen Rennen -> abgeschlossen
+  const ch1done: Record<string, number> = {}
+  CAREER[0].races.forEach((_, i) => (ch1done[raceKey('ch1', i)] = 1))
+  ok('Kapitel 1 nach 1 Stern je Rennen abgeschlossen', chapterComplete(CAREER[0], ch1done))
+  // ein Rennen ohne Stern -> nicht abgeschlossen
+  const ch1partial = { ...ch1done }
+  delete ch1partial[raceKey('ch1', CAREER[0].races.length - 1)]
+  ok('ein Rennen ohne Stern -> nicht abgeschlossen', !chapterComplete(CAREER[0], ch1partial))
+  ok('Karriere anfangs nicht abgeschlossen', !careerComplete(ch1done))
+  // alle Rennen aller Kapitel mit 1 Stern -> Karriere komplett
+  const all: Record<string, number> = {}
+  CAREER.forEach((c) => c.races.forEach((_, i) => (all[raceKey(c.id, i)] = 1)))
+  ok('alle Kapitel bestanden -> Karriere komplett', careerComplete(all))
+  ok('Finale-Text ist gesetzt', CAREER_FINALE.length > 0)
 }
 
 console.log(fails ? `\n${fails} FEHLER` : '\nAlle Tests bestanden')

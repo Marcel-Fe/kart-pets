@@ -6,8 +6,11 @@ import {
   raceKey,
   chapterStars,
   chapterUnlocked,
+  chapterComplete,
+  careerComplete,
   raceUnlocked,
   totalStars,
+  CAREER_FINALE,
 } from '../data/career'
 
 function Stars({ n, max = STARS_PER_RACE }: { n: number; max?: number }) {
@@ -29,6 +32,7 @@ export function CareerScreen() {
 
   const total = totalStars(careerStars)
   const maxStars = CAREER.reduce((n, c) => n + c.races.length * STARS_PER_RACE, 0)
+  const finished = careerComplete(careerStars)
 
   return (
     <div className="screen career" style={{ paddingBottom: 40 }}>
@@ -48,10 +52,29 @@ export function CareerScreen() {
         Sammle Sterne, schalte Kapitel und neue Freunde frei – und schlag den Champion Drako.
       </p>
 
+      {finished && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 460,
+            margin: '4px 0 8px',
+            padding: '14px 16px',
+            borderRadius: 14,
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #ffcf3f, #ff9d2f)',
+            color: '#241800',
+            fontWeight: 700,
+          }}
+        >
+          🏆 CHAMPION! {CAREER_FINALE}
+        </div>
+      )}
+
       {CAREER.map((chapter) => {
         const unlocked = chapterUnlocked(chapter, careerStars)
         const earned = chapterStars(chapter, careerStars)
         const chMax = chapter.races.length * STARS_PER_RACE
+        const done = chapterComplete(chapter, careerStars)
         return (
           <div
             key={chapter.id}
@@ -109,6 +132,23 @@ export function CareerScreen() {
                   </div>
                 )
               })}
+
+            {/* Story-Beat: Drako reagiert, sobald das Kapitel bestanden ist */}
+            {unlocked && done && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  background: 'rgba(226,59,46,0.14)',
+                  border: '1px solid rgba(226,59,46,0.45)',
+                  color: '#ffd7d0',
+                  fontStyle: 'italic',
+                }}
+              >
+                🐲 {chapter.victory}
+              </div>
+            )}
           </div>
         )
       })}
