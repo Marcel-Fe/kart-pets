@@ -5,6 +5,7 @@ import { sfx } from '../audio/sfx'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { rivalId } from '../data/cup'
+import { CAREER } from '../data/career'
 
 export function Hud() {
   const position = useHudStore((s) => s.position)
@@ -18,6 +19,13 @@ export function Hud() {
   const coins = useHudStore((s) => s.coins)
   const setScreen = useGameStore((s) => s.setScreen)
   const selectedPetId = useGameStore((s) => s.selectedPetId)
+  const raceMode = useGameStore((s) => s.raceMode)
+  const careerChapterIdx = useGameStore((s) => s.careerChapterIdx)
+  const careerRaceIdx = useGameStore((s) => s.careerRaceIdx)
+  const careerIntro =
+    raceMode === 'career'
+      ? CAREER[careerChapterIdx]?.races[careerRaceIdx]?.intro
+      : undefined
 
   const [confirmExit, setConfirmExit] = useState(false)
   const [soundOn, setSoundOn] = useState(sfx.isEnabled())
@@ -34,6 +42,31 @@ export function Hud() {
 
       {/* Sprechblasen NUR vor dem Rennen (Intro-Kamerafahrt + Countdown), dann weg */}
       {(intro || countdown > 0) && <PreRaceDialog playerId={selectedPetId} />}
+
+      {/* Karriere-Story: kurzer Erzähler-Beat vor dem Start */}
+      {(intro || countdown > 0) && careerIntro && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 74,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: 420,
+            width: '86%',
+            textAlign: 'center',
+            padding: '8px 14px',
+            borderRadius: 12,
+            background: 'rgba(12,14,28,0.82)',
+            border: '1px solid rgba(255,207,63,0.4)',
+            color: '#ffe9b0',
+            fontWeight: 600,
+            fontSize: 14,
+            pointerEvents: 'none',
+          }}
+        >
+          {careerIntro}
+        </div>
+      )}
 
       <button
         className="hud-sound"

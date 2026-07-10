@@ -6,6 +6,14 @@ import { costFor, type UpgradeArea } from '../data/upgrades'
 import { getDailyTask } from '../data/dailyTasks'
 import { PETS } from '../data/pets'
 import { CUP_TRACKS, CUP_POINTS, petIdFromEntry } from '../data/cup'
+import {
+  CAREER,
+  evaluateStars,
+  totalStars,
+  raceKey,
+  newlyUnlockedRewards,
+  type StarReward,
+} from '../data/career'
 
 export const CORE_PET_IDS = ['fynnox', 'pompao', 'zippo', 'drako', 'neko']
 export const EGG_COST = 400
@@ -32,9 +40,16 @@ interface GameState {
   lastHatched: string | null
 
   // Goldener Cup (Meisterschaft)
-  raceMode: 'free' | 'cup' // transient: wie das nächste Rennen gewertet wird
+  raceMode: 'free' | 'cup' | 'career' // transient: wie das nächste Rennen gewertet wird
   cupRaceIndex: number // abgeschlossene Cup-Rennen (0..CUP_TRACKS.length)
   cupPoints: Record<string, number> // petId -> Cup-Punkte
+
+  // Karrieremodus „Fynnox' Weg zum Ruhm"
+  careerStars: Record<string, number> // raceKey -> verdiente Sterne (0..3), persistiert
+  careerChapterIdx: number // aktuell gefahrenes Kapitel (transient)
+  careerRaceIdx: number // aktuell gefahrenes Rennen im Kapitel (transient)
+  lastStars: number // Sterne im zuletzt beendeten Karriere-Rennen (für Result)
+  lastRewards: StarReward[] // neu freigeschaltete Belohnungen (für Result)
 
   setScreen: (s: Screen) => void
   selectPet: (id: string) => void
@@ -48,6 +63,9 @@ interface GameState {
   startCup: () => void
   startCupRace: () => void
   continueCup: () => void
+  openCareer: () => void
+  startCareerRace: (chapterIdx: number, raceIdx: number) => void
+  continueCareer: () => void
 }
 
 export const useGameStore = create<GameState>()(
@@ -71,6 +89,11 @@ export const useGameStore = create<GameState>()(
       raceMode: 'free',
       cupRaceIndex: 0,
       cupPoints: {},
+      careerStars: {},
+      careerChapterIdx: 0,
+      careerRaceIdx: 0,
+      lastStars: 0,
+      lastRewards: [],
 
       setScreen: (s) => set({ screen: s }),
       selectPet: (id) => set({ selectedPetId: id }),
@@ -106,10 +129,40 @@ export const useGameStore = create<GameState>()(
             cupRaceIndex = state.cupRaceIndex + 1
           }
 
+          // In der Karriere: Sterne fürs Rennen gutschreiben (nur verbessern) und
+          // dadurch neu erreichte Meilenstein-Belohnungen (Diamanten/Münzen/Pets) auszahlen.
+          let careerStars = state.careerStars
+          let lastStars = 0
+          let lastRewards: StarReward[] = []
+          let bonusCoins = 0
+          let bonusDiamonds = 0
+          let owned = state.ownedPets ?? CORE_PET_IDS
+          if (state.raceMode === 'career') {
+            const chapter = CAREER[state.careerChapterIdx]
+            const race = chapter?.races[state.careerRaceIdx]
+            if (race) {
+              const key = raceKey(chapter.id, state.careerRaceIdx)
+              lastStars = evaluateStars(result, race)
+              const prevBest = state.careerStars[key] ?? 0
+              const prevTotal = totalStars(state.careerStars)
+              const best = Math.max(prevBest, lastStars)
+              careerStars = { ...state.careerStars, [key]: best }
+              const newTotal = totalStars(careerStars)
+              lastRewards = newlyUnlockedRewards(prevTotal, newTotal)
+              for (const r of lastRewards) {
+                bonusCoins += r.coins ?? 0
+                bonusDiamonds += r.diamonds ?? 0
+                if (r.petId && !owned.includes(r.petId)) owned = [...owned, r.petId]
+              }
+            }
+          }
+
           return {
             lastResult: result,
             lastXpGain: gain,
-            coins: state.coins + result.coins,
+            coins: state.coins + result.coins + bonusCoins,
+            diamonds: state.diamonds + bonusDiamonds,
+            ownedPets: owned,
             totalPoints: state.totalPoints + result.points,
             petXp: { ...state.petXp, [id]: (state.petXp[id] ?? 0) + gain },
             dailyDate: today(),
@@ -121,6 +174,9 @@ export const useGameStore = create<GameState>()(
             },
             cupPoints,
             cupRaceIndex,
+            careerStars,
+            lastStars,
+            lastRewards,
             screen: 'result',
           }
         }),
@@ -167,6 +223,22 @@ export const useGameStore = create<GameState>()(
           screen: 'race',
         })),
       continueCup: () => set({ screen: 'cup' }),
+
+      // Karriere-Übersicht öffnen.
+      openCareer: () => set({ screen: 'career' }),
+      // Ein Karriere-Rennen starten: passende Strecke wählen, als Karriere werten.
+      startCareerRace: (chapterIdx, raceIdx) =>
+        set(() => {
+          const race = CAREER[chapterIdx]?.races[raceIdx]
+          return {
+            raceMode: 'career',
+            careerChapterIdx: chapterIdx,
+            careerRaceIdx: raceIdx,
+            selectedTrackId: race?.trackId ?? CAREER[0].races[0].trackId,
+            screen: 'race',
+          }
+        }),
+      continueCareer: () => set({ screen: 'career' }),
     }),
     {
       name: 'kart-pets-save',
@@ -190,6 +262,7 @@ export const useGameStore = create<GameState>()(
         dailyDate: state.dailyDate,
         cupRaceIndex: state.cupRaceIndex,
         cupPoints: state.cupPoints,
+        careerStars: state.careerStars,
       }),
     },
   ),

@@ -43,7 +43,9 @@ export interface RaceResult {
   entries: RaceResultEntry[]
   playerRank: number
   points: number
-  coins: number
+  coins: number // Belohnung (nicht die eingesammelten Münzen)
+  coinsCollected: number // im Rennen eingesammelte Münzen (für Karriere-Sternenziel)
+  hits: number // wie oft der Spieler getroffen wurde (0 = Stern „ohne Treffer")
 }
 
-export type Screen = 'menu' | 'race' | 'result' | 'petprofile' | 'garage' | 'dailies' | 'eggs' | 'shop' | 'tracks' | 'cup'
+export type Screen = 'menu' | 'race' | 'result' | 'petprofile' | 'garage' | 'dailies' | 'eggs' | 'shop' | 'tracks' | 'cup' | 'career'

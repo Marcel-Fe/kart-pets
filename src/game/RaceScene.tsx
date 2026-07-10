@@ -135,6 +135,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const coinRefs = useRef<(THREE.Mesh | null)[]>([])
   const coinState = useMemo(() => coins.map(() => ({ got: false })), [coins])
   const coinsGot = useRef(0)
+  const playerHits = useRef(0) // wie oft der Spieler getroffen wurde (Karriere-Sternenziel)
 
   // Bananen: feste auf der Fahrbahn (versetzt links/Mitte/rechts, also ausweichbar)
   // plus freie Plätze für abgelegte Bananen.
@@ -309,7 +310,10 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         dt,
         {
           onHit: (k) => {
-            if (karts[k].isPlayer) sfx.spinOut()
+            if (karts[k].isPlayer) {
+              sfx.spinOut()
+              playerHits.current += 1
+            }
             if (import.meta.env.DEV) {
               const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
               w.__bananaHits = (w.__bananaHits ?? 0) + 1
@@ -506,7 +510,14 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       const placePoints = [0, 1000, 600, 300, 150][rank] ?? 100
       const points = placePoints + coinsGot.current * 10
       const reward = Math.round(placePoints / 8) + (rank === 1 ? 50 : 0) + coinsGot.current
-      onFinish({ entries, playerRank: rank, points, coins: reward })
+      onFinish({
+        entries,
+        playerRank: rank,
+        points,
+        coins: reward,
+        coinsCollected: coinsGot.current,
+        hits: playerHits.current,
+      })
     }
   })
 

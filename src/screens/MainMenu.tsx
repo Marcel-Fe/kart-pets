@@ -57,6 +57,7 @@ export function MainMenu() {
   const setScreen = useGameStore((s) => s.setScreen)
   const startFreeRace = useGameStore((s) => s.startFreeRace)
   const startCup = useGameStore((s) => s.startCup)
+  const openCareer = useGameStore((s) => s.openCareer)
 
   const [soon, setSoon] = useState('')
 
@@ -179,6 +180,17 @@ export function MainMenu() {
           </button>
         ))}
       </div>
+
+      {/* Karrieremodus – das große Story-Abenteuer mit Sternen */}
+      <button className="event-card" onClick={openCareer} style={{ background: 'linear-gradient(135deg, #b56bff, #3fa9ff)' }}>
+        <div className="event-glow" />
+        <div className="event-body">
+          <span className="event-tag">KARRIERE</span>
+          <span className="event-title">🌟 Fynnox' Weg zum Ruhm</span>
+          <span className="event-sub">Kapitel · Sterne sammeln · Freunde freischalten</span>
+        </div>
+        <span className="event-cta">Starten ›</span>
+      </button>
 
       {/* Goldener Cup – Meisterschaft mit Story & Rivale */}
       <button className="event-card" onClick={startCup}>
