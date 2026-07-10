@@ -3,13 +3,15 @@ import { TRACKS, isTrackUnlocked, DECOR_EMOJI } from '../data/tracks'
 import { asset } from '../utils/asset'
 import { playerLevelFromPoints } from '../data/progression'
 
-const WORLD_IMG: Record<string, string> = {
-  fluesterwald: '/art/worlds/fluesterwald.png',
-  candychaos: '/art/worlds/candychaos.png',
-  vulkanrasen: '/art/worlds/vulkanrasen.png',
-  skylinecity: '/art/worlds/skylinecity.png',
-  sternenkolonie: '/art/worlds/sternenkolonie.png',
-}
+// Strecken mit gemaltem Vorschaubild unter /art/worlds/<id>.png.
+// Alle anderen zeigen den Themen-Platzhalter (DECOR_EMOJI).
+const WITH_IMAGE = [
+  'fluesterwald', 'candychaos', 'vulkanrasen', 'skylinecity', 'sternenkolonie',
+  'waldsprint', 'zuckerwirbel', 'lavaring', 'gletschergleiter', 'neonkreisel',
+]
+const WORLD_IMG: Record<string, string> = Object.fromEntries(
+  WITH_IMAGE.map((id) => [id, `/art/worlds/${id}.png`]),
+)
 
 export function TrackSelect() {
   const totalPoints = useGameStore((s) => s.totalPoints)

@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types scripts/test-hazards.ts"
+    "test": "npm run test:hazards && npm run test:tracks",
+    "test:hazards": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-hazards.ts",
+    "test:tracks": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-tracks.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
