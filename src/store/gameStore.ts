@@ -4,6 +4,8 @@ import type { Screen, RaceResult } from '../types'
 import { xpFromPoints } from '../data/progression'
 import { costFor, type UpgradeArea } from '../data/upgrades'
 import { getDailyTask } from '../data/dailyTasks'
+import { findShopItem, buyStatus, applyPurchase } from '../data/shop'
+import { STORE_LIVE } from '../data/storeConfig'
 import { PETS } from '../data/pets'
 import { CUP_TRACKS, CUP_POINTS, petIdFromEntry } from '../data/cup'
 import {
@@ -32,6 +34,7 @@ interface GameState {
   petXp: Record<string, number> // Gesamt-XP je Pet
   upgrades: Record<string, number> // Bereich -> gekaufte Stufe
   ownedPets: string[]
+  ownedCosmetics: string[] // gekaufte Kosmetik (Skins/Designs/Pass)
   dailyProgress: Record<string, number> // metric -> Fortschritt heute
   claimedTasks: string[]
   dailyDate: string
@@ -55,6 +58,7 @@ interface GameState {
   selectPet: (id: string) => void
   selectTrack: (id: string) => void
   buyUpgrade: (area: UpgradeArea) => void
+  buyShopItem: (id: string) => void
   finishRace: (result: RaceResult) => void
   refreshDaily: () => void
   claimTask: (id: string) => void
@@ -80,6 +84,7 @@ export const useGameStore = create<GameState>()(
       petXp: {},
       upgrades: {},
       ownedPets: CORE_PET_IDS,
+      ownedCosmetics: [],
       dailyProgress: {},
       claimedTasks: [],
       dailyDate: today(),
@@ -107,6 +112,21 @@ export const useGameStore = create<GameState>()(
             coins: state.coins - cost,
             upgrades: { ...state.upgrades, [area]: level + 1 },
           }
+        }),
+      // Shop-Kauf (In-Game-Währung). €-Käufe brauchen native IAP und werden hier
+      // bewusst NICHT abgewickelt – buyStatus liefert dann 'needs-iap' und blockt.
+      buyShopItem: (id) =>
+        set((state) => {
+          const item = findShopItem(id)
+          if (!item) return state
+          const wallet = {
+            coins: state.coins,
+            diamonds: state.diamonds,
+            ownedCosmetics: state.ownedCosmetics ?? [],
+          }
+          if (buyStatus(item, wallet, STORE_LIVE) !== 'ok') return state
+          const next = applyPurchase(item, wallet)
+          return { coins: next.coins, diamonds: next.diamonds, ownedCosmetics: next.ownedCosmetics }
         }),
       finishRace: (result) =>
         set((state) => {
@@ -257,6 +277,7 @@ export const useGameStore = create<GameState>()(
         petXp: state.petXp,
         upgrades: state.upgrades,
         ownedPets: state.ownedPets,
+        ownedCosmetics: state.ownedCosmetics,
         dailyProgress: state.dailyProgress,
         claimedTasks: state.claimedTasks,
         dailyDate: state.dailyDate,
