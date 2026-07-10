@@ -44,6 +44,7 @@ interface GameState {
   lastXpGain: number
   lastResult: RaceResult | null
   lastHatched: string | null
+  tutorialSeen: boolean // Steuerungs-Tipps im ersten Rennen bereits gezeigt?
 
   // Goldener Cup (Meisterschaft)
   raceMode: 'free' | 'cup' | 'career' // transient: wie das nächste Rennen gewertet wird
@@ -72,6 +73,7 @@ interface GameState {
   startCup: () => void
   startCupRace: () => void
   continueCup: () => void
+  markTutorialSeen: () => void
   openCareer: () => void
   startCareerRace: (chapterIdx: number, raceIdx: number) => void
   continueCareer: () => void
@@ -98,6 +100,7 @@ export const useGameStore = create<GameState>()(
       lastXpGain: 0,
       lastResult: null,
       lastHatched: null,
+      tutorialSeen: false,
       raceMode: 'free',
       cupRaceIndex: 0,
       cupPoints: {},
@@ -269,6 +272,7 @@ export const useGameStore = create<GameState>()(
           screen: 'race',
         })),
       continueCup: () => set({ screen: 'cup' }),
+      markTutorialSeen: () => set({ tutorialSeen: true }),
 
       // Karriere-Übersicht öffnen.
       openCareer: () => set({ screen: 'career' }),
@@ -312,6 +316,7 @@ export const useGameStore = create<GameState>()(
         cupRaceIndex: state.cupRaceIndex,
         cupPoints: state.cupPoints,
         careerStars: state.careerStars,
+        tutorialSeen: state.tutorialSeen,
       }),
     },
   ),

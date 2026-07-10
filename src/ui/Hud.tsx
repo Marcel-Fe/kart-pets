@@ -6,6 +6,7 @@ import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { rivalId } from '../data/cup'
 import { CAREER } from '../data/career'
+import { TutorialOverlay } from './TutorialOverlay'
 
 export function Hud() {
   const position = useHudStore((s) => s.position)
@@ -152,6 +153,9 @@ export function Hud() {
         <div className="countdown">{countdown}</div>
       )}
       {countdown === 0 && <CountdownGo />}
+
+      {/* Steuerungs-Tipps nur im allerersten Rennen, sobald es losgeht */}
+      {countdown <= 0 && <TutorialOverlay />}
 
       {confirmExit && (
         <div className="race-pause">
