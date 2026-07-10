@@ -10,6 +10,7 @@ export const controls = {
   autoThrottle: false,
   brake: false,
   useItem: false, // Banane ablegen
+  power: false, // Pet-Power auslösen (wenn Jubel-Leiste voll)
 }
 
 export function resetControls() {
@@ -20,6 +21,7 @@ export function resetControls() {
   controls.boost = false
   controls.brake = false
   controls.useItem = false
+  controls.power = false
 }
 
 // Tastatur für bequemes Testen am Desktop.
@@ -58,6 +60,9 @@ function set(code: string, v: boolean) {
       break
     case 'KeyE':
       controls.useItem = v
+      break
+    case 'KeyQ':
+      controls.power = v
       break
     case 'Space':
       controls.drift = v

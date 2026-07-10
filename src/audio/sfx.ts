@@ -354,4 +354,40 @@ export const sfx = {
   click() {
     blip(320, 0.05, 'square', 0.08)
   },
+
+  // --- Pet-Power: tierspezifischer Klang beim Auslösen (Jubel-Leiste voll) ---
+  power(type: 'fire' | 'jump' | 'invincible' | 'scare') {
+    const c = ensure()
+    if (!c || !master) return
+    if (type === 'fire') {
+      // Feuer-Grollen: absackender Ton + gefiltertes Rauschen
+      blip(150, 0.55, 'sawtooth', 0.16, 70)
+      const t = c.currentTime
+      const src = c.createBufferSource()
+      src.buffer = noise(c)
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(1200, t)
+      bp.frequency.exponentialRampToValueAtTime(300, t + 0.5)
+      bp.Q.value = 1.2
+      const g = c.createGain()
+      g.gain.setValueAtTime(0.0001, t)
+      g.gain.exponentialRampToValueAtTime(0.2, t + 0.04)
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55)
+      src.connect(bp).connect(g).connect(master)
+      src.start(t)
+      src.stop(t + 0.6)
+    } else if (type === 'jump') {
+      // „Boing": schnell hoch, dann zurück
+      blip(300, 0.18, 'square', 0.18, 900)
+      window.setTimeout(() => blip(760, 0.16, 'square', 0.14, 320), 130)
+    } else if (type === 'invincible') {
+      // schimmernder Aufwärts-Arpeggio
+      ;[660, 880, 1100, 1320].forEach((f, i) => window.setTimeout(() => blip(f, 0.22, 'sine', 0.13), i * 70))
+    } else {
+      // 'scare': greller, absackender Schreck-Ton
+      blip(760, 0.42, 'sawtooth', 0.17, 180)
+      window.setTimeout(() => blip(520, 0.2, 'square', 0.1, 160), 90)
+    }
+  },
 }

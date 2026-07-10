@@ -155,6 +155,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const spectatorSpots = useMemo(() => spectatorPositions(curve), [curve])
   const cheerCharge = useRef(0)
   const powerFx = useRef<{ type: PetPower; time: number } | null>(null)
+  const prevPower = useRef(false) // Flanke des Power-Knopfs
 
   // Bananen: feste auf der Fahrbahn (versetzt links/Mitte/rechts, also ausweichbar)
   // plus freie Plätze für abgelegte Bananen.
@@ -405,10 +406,13 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         }
       }
 
-      // Jubel-Leiste füllen (nah an den Zuschauern) und bei „voll" die Pet-Power
-      // automatisch auslösen – belohnt mutiges Fahren am Streckenrand.
+      // Jubel-Leiste füllen (nah an den Zuschauern). Ist sie voll, wartet sie –
+      // der Spieler löst die Pet-Power selbst aus (Power-Knopf / Taste Q), damit er
+      // den richtigen Moment wählen kann. Flanke, einmal je Druck.
       cheerCharge.current = Math.min(1, cheerCharge.current + cheerGain(player.x, player.z, spectatorSpots, dt))
-      if (cheerCharge.current >= 1 && !(spin.current[0] ?? 0)) {
+      const firePower = controls.power && !prevPower.current && cheerCharge.current >= 1 && !(spin.current[0] ?? 0)
+      prevPower.current = controls.power
+      if (firePower) {
         cheerCharge.current = 0
         const p = player.pet.power
         powerFx.current = { type: p, time: POWER_DURATION }
@@ -434,7 +438,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         } else {
           shield.current[0] = true // invincible / jump: schützt vor dem nächsten Treffer
         }
-        sfx.boost()
+        sfx.power(p)
         if (import.meta.env.DEV) {
           const w = window as unknown as { __powerFires?: number }
           w.__powerFires = (w.__powerFires ?? 0) + 1
