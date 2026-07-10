@@ -1,25 +1,46 @@
-// Streckenhindernisse (Bananen) – reine Logik, ohne React und ohne Three.js.
+// Streckenhindernisse & Items – reine Logik, ohne React und ohne Three.js.
 // Bewusst getrennt von raceSim.ts (Fahrphysik) und von RaceScene (Darstellung),
-// damit sie deterministisch testbar ist.
+// damit sie deterministisch testbar ist. Siehe scripts/test-hazards.ts.
 
 export const SPIN_DURATION = 1.1 // Sekunden Kontrollverlust
 export const SPIN_TURNS = 2 // sichtbare Umdrehungen währenddessen
-export const BANANA_RESPAWN = 6 // Sekunden bis die Banane wiederkommt
+export const BANANA_RESPAWN = 6 // Sekunden bis eine Strecken-Banane wiederkommt
 export const BANANA_HIT_R = 1.8 // Trefferradius in Metern
+export const BOX_HIT_R = 2.2 // Item-Boxen greift man großzügiger ab
+export const BOX_RESPAWN = 5 // Sekunden bis eine Item-Box wiederkommt
 export const SPIN_MAX_SPEED = 7 // gedeckeltes Tempo während des Schleuderns
 export const SPIN_SPEED_KEEP = 0.35 // Restgeschwindigkeit direkt beim Treffer
+export const DROP_BEHIND = 2.6 // Meter hinter dem Kart wird abgelegt
 
-const HIT_R2 = BANANA_HIT_R * BANANA_HIT_R
+const BANANA_R2 = BANANA_HIT_R * BANANA_HIT_R
+const BOX_R2 = BOX_HIT_R * BOX_HIT_R
+
+export type Item = 'banana' | null
 
 export interface Vec2 {
   x: number
   z: number
 }
 
+export interface Banana {
+  x: number
+  z: number
+  timer: number // >0 = gerade eingesammelt, zählt runter
+  fixed: boolean // true = gehört zur Strecke (kommt zurück); false = abgelegt
+  alive: boolean // false = freier Platz (nur bei abgelegten)
+}
+
+export interface ItemBox {
+  x: number
+  z: number
+  timer: number // >0 = gerade abgegriffen
+}
+
 // Nur die Felder, die Hindernisse anfassen dürfen.
 export interface HazardKart {
   x: number
   z: number
+  heading: number
   speed: number
   drifting: boolean
   driftCharge: number
@@ -42,22 +63,36 @@ export function segDist2(px: number, pz: number, ax: number, az: number, bx: num
   return ex * ex + ez * ez
 }
 
+/** Legt eine Banane hinter dem Kart ab. Gibt false zurück, wenn kein Platz frei ist. */
+export function dropBanana(kart: HazardKart, bananas: Banana[]): boolean {
+  const slot = bananas.find((b) => !b.fixed && !b.alive)
+  if (!slot) return false
+  slot.x = kart.x - Math.sin(kart.heading) * DROP_BEHIND
+  slot.z = kart.z - Math.cos(kart.heading) * DROP_BEHIND
+  slot.timer = 0
+  slot.alive = true
+  return true
+}
+
+/** Sichtbar ist eine Banane nur, wenn sie existiert und nicht gerade abgeräumt wurde. */
+export function bananaVisible(b: Banana): boolean {
+  return b.alive && b.timer <= 0
+}
+
 /**
- * Ein Schritt der Hindernis-Logik. Verändert `spin`, `timers`, `prev` und die
- * Karts (nur speed/drifting/driftCharge). `onHit` meldet jeden Treffer.
- *
- * @param spin   verbleibende Schleuderzeit je Kart (gleiche Reihenfolge wie karts)
- * @param prev   Position im vorigen Schritt je Kart (wird hier fortgeschrieben)
- * @param timers Rückkehr-Countdown je Banane (>0 = gerade eingesammelt)
+ * Ein Schritt der Hindernis- und Item-Logik.
+ * Verändert `spin`, `held`, `prev`, die Bananen/Boxen und die Karts
+ * (nur speed/drifting/driftCharge). Meldet Treffer und Aufnahmen.
  */
 export function updateHazards(
   karts: HazardKart[],
-  bananas: Vec2[],
+  bananas: Banana[],
+  boxes: ItemBox[],
   spin: number[],
+  held: Item[],
   prev: Vec2[],
-  timers: number[],
   dt: number,
-  onHit?: (kartIndex: number) => void,
+  cb?: { onHit?: (kartIndex: number) => void; onPickup?: (kartIndex: number) => void },
 ): void {
   // 1) Schleudern abbauen und Tempo deckeln
   for (let i = 0; i < karts.length; i++) {
@@ -69,28 +104,49 @@ export function updateHazards(
   }
 
   // 2) Bananen: Rückkehr zählen bzw. Treffer prüfen
-  for (let b = 0; b < bananas.length; b++) {
-    if (timers[b] > 0) {
-      timers[b] = Math.max(0, timers[b] - dt)
+  for (const b of bananas) {
+    if (!b.alive) continue
+    if (b.timer > 0) {
+      b.timer = Math.max(0, b.timer - dt)
       continue
     }
     for (let k = 0; k < karts.length; k++) {
-      if ((spin[k] ?? 0) > 0) continue // wer schon schleudert, wird nicht erneut getroffen
+      if ((spin[k] ?? 0) > 0) continue // wer schleudert, wird nicht erneut getroffen
       const p = prev[k]
       const ax = p ? p.x : karts[k].x
       const az = p ? p.z : karts[k].z
       // die GANZE Bewegung dieses Schritts prüfen, nicht nur den Endpunkt
-      if (segDist2(bananas[b].x, bananas[b].z, ax, az, karts[k].x, karts[k].z) > HIT_R2) continue
+      if (segDist2(b.x, b.z, ax, az, karts[k].x, karts[k].z) > BANANA_R2) continue
       spin[k] = SPIN_DURATION
       karts[k].speed *= SPIN_SPEED_KEEP
       karts[k].driftCharge = 0
-      timers[b] = BANANA_RESPAWN
-      onHit?.(k)
+      if (b.fixed) b.timer = BANANA_RESPAWN // Strecken-Banane kommt zurück
+      else b.alive = false // abgelegte ist aufgebraucht
+      cb?.onHit?.(k)
       break
     }
   }
 
-  // 3) Positionen für die überstrichene Prüfung im nächsten Schritt sichern
+  // 3) Item-Boxen: nur wer nichts hat, greift zu
+  for (const box of boxes) {
+    if (box.timer > 0) {
+      box.timer = Math.max(0, box.timer - dt)
+      continue
+    }
+    for (let k = 0; k < karts.length; k++) {
+      if (held[k]) continue
+      const p = prev[k]
+      const ax = p ? p.x : karts[k].x
+      const az = p ? p.z : karts[k].z
+      if (segDist2(box.x, box.z, ax, az, karts[k].x, karts[k].z) > BOX_R2) continue
+      held[k] = 'banana'
+      box.timer = BOX_RESPAWN
+      cb?.onPickup?.(k)
+      break
+    }
+  }
+
+  // 4) Positionen für die überstrichene Prüfung im nächsten Schritt sichern
   for (let i = 0; i < karts.length; i++) {
     const p = prev[i]
     if (p) {

@@ -12,6 +12,7 @@ interface HudState {
   intro: boolean // true während der Vorstart-Kamerafahrt (Sprechblasen sichtbar)
   speedKmh: number
   coins: number // im Rennen eingesammelte Münzen
+  item: 'banana' | null // gehaltenes Item
   set: (p: Partial<HudState>) => void
 }
 
@@ -25,5 +26,6 @@ export const useHudStore = create<HudState>((set) => ({
   intro: false,
   speedKmh: 0,
   coins: 0,
+  item: null,
   set: (p) => set(p),
 }))

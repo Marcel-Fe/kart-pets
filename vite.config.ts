@@ -18,6 +18,9 @@ export default defineConfig({
         lang: 'de',
         theme_color: '#0a1030',
         background_color: '#0a1030',
+        // Vollbild bevorzugt (keine Adress- UND keine Statusleiste). Wo das nicht
+        // unterstuetzt wird, faellt der Browser auf 'standalone' zurueck.
+        display_override: ['fullscreen', 'standalone'],
         display: 'standalone',
         // Beide Orientierungen erlauben: Menü ist Hochformat, im Rennen kann quer gedreht werden.
         orientation: 'any',

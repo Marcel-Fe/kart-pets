@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { RoundedBox, Float } from '@react-three/drei'
+import { RoundedBox } from '@react-three/drei'
 import { TrackCurve } from './trackCurve'
 import type { TrackTheme } from '../data/tracks'
 import { ROAD_WIDTH } from '../data/tracks'
@@ -224,12 +224,6 @@ export function Track({ curve, theme }: Props) {
     return out
   }, [curve])
 
-  const items = useMemo(() => {
-    return [0.18, 0.42, 0.66, 0.88].map((t) => {
-      const p = curve.pointAt(t)
-      return { x: p.x, z: p.z }
-    })
-  }, [curve])
 
   const start = curve.samples[0]
   const startNor = curve.normals[0]
@@ -321,22 +315,6 @@ export function Track({ curve, theme }: Props) {
       >
         <meshStandardMaterial color={theme.accent} emissive={theme.accent} emissiveIntensity={0.5} />
       </RoundedBox>
-
-      {/* Schwebende Item-Boxen */}
-      {items.map((it, i) => (
-        <Float key={i} speed={3} floatIntensity={1.2} rotationIntensity={1.5}>
-          <mesh position={[it.x, 2.2, it.z]} castShadow>
-            <boxGeometry args={[1.6, 1.6, 1.6]} />
-            <meshStandardMaterial
-              color={theme.accent}
-              emissive={theme.accent}
-              emissiveIntensity={0.6}
-              metalness={0.3}
-              roughness={0.2}
-            />
-          </mesh>
-        </Float>
-      ))}
 
       {/* Theme-Dekoration: instanziert (ein Zeichenaufruf je Bauteil), Wind im Shader */}
       <Scatter items={scatter} decor={theme.decor} />

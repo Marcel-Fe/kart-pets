@@ -13,7 +13,7 @@ import { sfx } from '../audio/sfx'
 import { AI_STYLES } from '../data/pets'
 import type { Pet, RaceResult, RaceResultEntry } from '../types'
 import type { TrackDef } from '../data/tracks'
-import { updateHazards, spinAngle } from './hazards'
+import { updateHazards, spinAngle, dropBanana, bananaVisible, type Banana, type ItemBox, type Item } from './hazards'
 import {
   updatePlayer,
   updateAI,
@@ -126,24 +126,42 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const coinState = useMemo(() => coins.map(() => ({ got: false })), [coins])
   const coinsGot = useRef(0)
 
-  // Bananen liegen versetzt auf der Fahrbahn (links / Mitte / rechts) – ausweichbar.
-  const bananas = useMemo(() => {
-    const arr: { x: number; z: number }[] = []
+  // Bananen: feste auf der Fahrbahn (versetzt links/Mitte/rechts, also ausweichbar)
+  // plus freie Plätze für abgelegte Bananen.
+  const DROP_SLOTS = 8
+  const bananas = useMemo<Banana[]>(() => {
+    const arr: Banana[] = []
     const n = curve.samples.length
     let k = 0
     for (let i = 30; i < n; i += 37) {
       const p = curve.samples[i]
       const nor = curve.normals[i]
       const lat = ((k % 3) - 1) * 3.6
-      arr.push({ x: p.x + nor.x * lat, z: p.z + nor.z * lat })
+      arr.push({ x: p.x + nor.x * lat, z: p.z + nor.z * lat, timer: 0, fixed: true, alive: true })
       k++
     }
+    for (let i = 0; i < DROP_SLOTS; i++) arr.push({ x: 0, z: 0, timer: 0, fixed: false, alive: false })
     return arr
   }, [curve])
   const bananaRefs = useRef<(THREE.Group | null)[]>([])
-  const bananaTimer = useMemo(() => bananas.map(() => 0), [bananas]) // >0 = eingesammelt, zählt runter
+
+  // Item-Boxen auf der Mittellinie – durchfahren gibt eine Banane.
+  const boxes = useMemo<ItemBox[]>(
+    () =>
+      [0.1, 0.22, 0.35, 0.47, 0.6, 0.72, 0.84, 0.95].map((t) => {
+        const p = curve.pointAt(t)
+        return { x: p.x, z: p.z, timer: 0 }
+      }),
+    [curve],
+  )
+  const boxRefs = useRef<(THREE.Mesh | null)[]>([])
+
   // Restliche Schleuder-Zeit je Kart (Index wie `karts`) – bewusst NICHT im KartState.
   const spin = useRef<number[]>([])
+  // Gehaltenes Item je Kart, ebenfalls außerhalb der Fahrphysik.
+  const held = useMemo<Item[]>(() => karts.map(() => null), [karts])
+  const prevUse = useRef(false) // Flanke des Item-Knopfs
+  const aiDropTimer = useMemo(() => karts.map(() => 1 + Math.random() * 3), [karts])
   // Position im vorigen Bild, für die überstrichene Trefferprüfung.
   const prevPos = useRef<{ x: number; z: number }[]>([])
 
@@ -229,19 +247,65 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         updateAI(karts[i], curve, proj.lateral, dt)
       }
 
-      // Bananen (getestete Logik in hazards.ts): Treffer, Schleudern, Wiederkehr
-      updateHazards(karts, bananas, spin.current, prevPos.current, bananaTimer, dt, (k) => {
-        if (karts[k].isPlayer) sfx.spinOut()
-        if (import.meta.env.DEV) {
-          const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
-          w.__bananaHits = (w.__bananaHits ?? 0) + 1
-          if (karts[k].isPlayer) w.__playerSpins = (w.__playerSpins ?? 0) + 1
+      if (import.meta.env.DEV) {
+        // Nur fuer automatisierte Tests: aktuelle Seitenablage des Spielers.
+        ;(window as unknown as { __playerLateral?: number }).__playerLateral = onTrack.lateral
+      }
+
+      // Spieler legt eine Banane ab (Flanke: einmal je Knopfdruck)
+      if (controls.useItem && !prevUse.current && held[0] === 'banana' && dropBanana(player, bananas)) {
+        held[0] = null
+        sfx.click()
+      }
+      prevUse.current = controls.useItem
+
+      // Gegner nutzen ihre Bananen ebenfalls – kurz nachdem sie eine haben.
+      for (let i = 1; i < karts.length; i++) {
+        if (!held[i]) continue
+        aiDropTimer[i] -= dt
+        if (aiDropTimer[i] <= 0) {
+          if (dropBanana(karts[i], bananas)) held[i] = null
+          aiDropTimer[i] = 1 + Math.random() * 3
         }
+      }
+
+      // Bananen + Item-Boxen (getestete Logik in hazards.ts)
+      updateHazards(karts, bananas, boxes, spin.current, held, prevPos.current, dt, {
+        onHit: (k) => {
+          if (karts[k].isPlayer) sfx.spinOut()
+          if (import.meta.env.DEV) {
+            const w = window as unknown as { __bananaHits?: number; __playerSpins?: number }
+            w.__bananaHits = (w.__bananaHits ?? 0) + 1
+            if (karts[k].isPlayer) w.__playerSpins = (w.__playerSpins ?? 0) + 1
+          }
+        },
+        onPickup: (k) => {
+          if (karts[k].isPlayer) sfx.coin()
+          if (import.meta.env.DEV) {
+            const w = window as unknown as { __pickups?: number; __playerPickups?: number }
+            w.__pickups = (w.__pickups ?? 0) + 1
+            if (karts[k].isPlayer) w.__playerPickups = (w.__playerPickups ?? 0) + 1
+          }
+        },
       })
-      // Sichtbarkeit der Bananen an die Countdown-Werte koppeln
+
+      // Sichtbarkeit von Bananen und Boxen nachziehen
       for (let i = 0; i < bananas.length; i++) {
         const g = bananaRefs.current[i]
-        if (g) g.visible = bananaTimer[i] <= 0
+        if (g) g.visible = bananaVisible(bananas[i])
+        if (g && g.visible) {
+          g.position.x = bananas[i].x
+          g.position.z = bananas[i].z
+        }
+      }
+      for (let i = 0; i < boxes.length; i++) {
+        const m = boxRefs.current[i]
+        if (!m) continue
+        m.visible = boxes[i].timer <= 0
+        if (m.visible) {
+          m.rotation.y += dt * 1.6
+          m.position.y = 2.0 + Math.sin(performance.now() * 0.003 + i) * 0.25
+        }
       }
 
       resolveCollisions(karts)
@@ -357,6 +421,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         intro: introing,
         speedKmh: speedKmh(player),
         coins: coinsGot.current,
+        item: held[0],
       })
     }
 
@@ -450,9 +515,28 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
 
       {/* Bananen: drüberfahren = schleudern */}
       {bananas.map((b, i) => (
-        <group key={'b' + i} ref={(el) => { bananaRefs.current[i] = el }} position={[b.x, 0.34, b.z]}>
+        <group
+          key={'b' + i}
+          ref={(el) => { bananaRefs.current[i] = el }}
+          position={[b.x, 0.34, b.z]}
+          visible={bananaVisible(b)}
+        >
           <Banana />
         </group>
+      ))}
+
+      {/* Item-Boxen: durchfahren gibt eine Banane */}
+      {boxes.map((b, i) => (
+        <mesh key={'ib' + i} ref={(el) => { boxRefs.current[i] = el }} position={[b.x, 2.0, b.z]} castShadow>
+          <boxGeometry args={[1.6, 1.6, 1.6]} />
+          <meshStandardMaterial
+            color={theme.accent}
+            emissive={theme.accent}
+            emissiveIntensity={0.6}
+            metalness={0.3}
+            roughness={0.2}
+          />
+        </mesh>
       ))}
 
       <EffectComposer enableNormalPass={false}>

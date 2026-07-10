@@ -1,7 +1,7 @@
 import { controls } from '../game/controls'
 import { useHudStore } from '../store/hudStore'
 
-type Key = 'steerLeft' | 'steerRight' | 'drift' | 'brake'
+type Key = 'steerLeft' | 'steerRight' | 'drift' | 'brake' | 'useItem'
 
 function hold(key: Key) {
   // pointer-events: gedrückt halten = true, loslassen = false
@@ -21,6 +21,7 @@ function hold(key: Key) {
 export function TouchControls() {
   // Leiste geladen -> Loslassen feuert den Boost. Der Knopf zeigt das durch Leuchten.
   const boostReady = useHudStore((s) => s.boostCharge) >= 0.25
+  const item = useHudStore((s) => s.item)
 
   return (
     <div className="touch-layer">
@@ -30,6 +31,15 @@ export function TouchControls() {
         </button>
         <button className="tc-btn steer" {...hold('steerRight')} aria-label="Rechts">
           ►
+        </button>
+        {/* Item: leuchtet nur, wenn du eine Banane hast. Ablegen = fallen lassen. */}
+        <button
+          className={'tc-btn item' + (item ? ' has' : '')}
+          {...hold('useItem')}
+          disabled={!item}
+          aria-label="Banane ablegen"
+        >
+          {item ? '🍌' : '–'}
         </button>
       </div>
       <div className="touch-right">

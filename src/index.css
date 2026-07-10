@@ -676,6 +676,24 @@ body {
 .tc-btn.steer:active {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
+/* Item-Knopf: dunkel wenn leer, leuchtet wenn eine Banane bereitliegt. */
+.tc-btn.item {
+  width: 74px;
+  height: 96px;
+  font-size: 34px;
+  background: linear-gradient(180deg, rgba(58, 70, 140, 0.5), rgba(34, 42, 96, 0.5));
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  opacity: 0.5;
+}
+.tc-btn.item.has {
+  background: linear-gradient(180deg, #ffe98a, #ffc23f);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 5px 0 #b8860b, 0 0 18px 3px rgba(255, 210, 63, 0.7);
+  opacity: 1;
+}
+.tc-btn.item.has:active { box-shadow: 0 2px 0 #b8860b, 0 0 18px 3px rgba(255, 210, 63, 0.7); }
+
 /* Kleine Bremse – Gas läuft automatisch, das hier hält nur kurz an. */
 .tc-btn.brake {
   width: 74px;
