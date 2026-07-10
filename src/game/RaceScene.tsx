@@ -20,10 +20,22 @@ import {
   bananaVisible,
   rollItem,
   ROCKET_BOOST_TIME,
+  BANANA_RESPAWN,
   type Banana,
   type ItemBox,
   type Item,
 } from './hazards'
+import {
+  spectatorPositions,
+  cheerGain,
+  POWER_META,
+  POWER_BOOST,
+  POWER_DURATION,
+  POWER_FIRE_RADIUS,
+  POWER_SCARE_RADIUS,
+  POWER_SCARE_SLOW,
+  type PetPower,
+} from './cheer'
 import {
   updatePlayer,
   updateAI,
@@ -136,6 +148,11 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const coinState = useMemo(() => coins.map(() => ({ got: false })), [coins])
   const coinsGot = useRef(0)
   const playerHits = useRef(0) // wie oft der Spieler getroffen wurde (Karriere-Sternenziel)
+
+  // Jubel-Leiste: füllt sich beim Vorbeifahren an den Zuschauern (geteilte Positionen).
+  const spectatorSpots = useMemo(() => spectatorPositions(curve), [curve])
+  const cheerCharge = useRef(0)
+  const powerFx = useRef<{ type: PetPower; time: number } | null>(null)
 
   // Bananen: feste auf der Fahrbahn (versetzt links/Mitte/rechts, also ausweichbar)
   // plus freie Plätze für abgelegte Bananen.
@@ -382,6 +399,48 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
           if (mesh) mesh.visible = false
         }
       }
+
+      // Jubel-Leiste füllen (nah an den Zuschauern) und bei „voll" die Pet-Power
+      // automatisch auslösen – belohnt mutiges Fahren am Streckenrand.
+      cheerCharge.current = Math.min(1, cheerCharge.current + cheerGain(player.x, player.z, spectatorSpots, dt))
+      if (cheerCharge.current >= 1 && !(spin.current[0] ?? 0)) {
+        cheerCharge.current = 0
+        const p = player.pet.power
+        powerFx.current = { type: p, time: POWER_DURATION }
+        player.boostTime = Math.max(player.boostTime, POWER_BOOST)
+        if (p === 'fire') {
+          const r2 = POWER_FIRE_RADIUS * POWER_FIRE_RADIUS
+          for (const b of bananas) {
+            if (!b.alive || b.timer > 0) continue
+            const dx = b.x - player.x
+            const dz = b.z - player.z
+            if (dx * dx + dz * dz <= r2) {
+              if (b.fixed) b.timer = BANANA_RESPAWN
+              else b.alive = false
+            }
+          }
+        } else if (p === 'scare') {
+          const r2 = POWER_SCARE_RADIUS * POWER_SCARE_RADIUS
+          for (let i = 1; i < karts.length; i++) {
+            const dx = karts[i].x - player.x
+            const dz = karts[i].z - player.z
+            if (dx * dx + dz * dz <= r2) karts[i].speed *= POWER_SCARE_SLOW
+          }
+        } else {
+          shield.current[0] = true // invincible / jump: schützt vor dem nächsten Treffer
+        }
+        sfx.boost()
+        if (import.meta.env.DEV) {
+          const w = window as unknown as { __powerFires?: number }
+          w.__powerFires = (w.__powerFires ?? 0) + 1
+        }
+      }
+    }
+
+    // Power-Optik/HUD-Flash auslaufen lassen
+    if (powerFx.current) {
+      powerFx.current.time -= dt
+      if (powerFx.current.time <= 0) powerFx.current = null
     }
 
     // --- Sound: Motor-Tempo, Boost, Drift ---
@@ -486,6 +545,10 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         speedKmh: speedKmh(player),
         coins: coinsGot.current,
         item: held[0],
+        cheerCharge: cheerCharge.current,
+        powerFlash: powerFx.current
+          ? `${POWER_META[powerFx.current.type].emoji} ${POWER_META[powerFx.current.type].label}`
+          : null,
       })
     }
 

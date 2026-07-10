@@ -8,6 +8,7 @@ import { PetAvatar } from '../ui/PetAvatar'
 import { PetPuppet } from '../ui/PetPuppet'
 import { asset } from '../utils/asset'
 import { levelFromXp, STAGE_EMOJI, playerLevelFromPoints } from '../data/progression'
+import { POWER_META } from '../game/cheer'
 import type { Rarity, Screen } from '../types'
 
 const RARITY_COLOR: Record<Rarity, string> = {
@@ -163,6 +164,14 @@ export function MainMenu() {
         </div>
         <div className="pet-ability">
           <strong>⚡ {selected.ability}</strong>
+        </div>
+        <div className="pet-ability" style={{ marginTop: 4 }}>
+          <strong>
+            {POWER_META[selected.power].emoji} Pet-Power: {POWER_META[selected.power].label}
+          </strong>
+          <span className="hint" style={{ display: 'block', fontWeight: 400 }}>
+            {POWER_META[selected.power].desc}
+          </span>
         </div>
       </div>
 

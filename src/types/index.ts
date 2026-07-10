@@ -2,6 +2,9 @@ export type Rarity = 'Common' | 'Rare' | 'Epic' | 'Legendary'
 
 export type EarType = 'fox' | 'panda' | 'rabbit' | 'cat' | 'dragon'
 
+// Tier-spezifische „Pet-Power", ausgelöst durch die volle Jubel-Leiste.
+export type PetPower = 'fire' | 'jump' | 'invincible' | 'scare'
+
 export interface Pet {
   id: string
   name: string
@@ -21,6 +24,7 @@ export interface Pet {
   control: number // 1..10 -> affects steering/grip
   ability: string
   personality: string
+  power: PetPower // Jubel-Leisten-Fähigkeit
 }
 
 export interface AIStyle {

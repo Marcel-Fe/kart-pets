@@ -22,6 +22,7 @@ export const PETS: Pet[] = [
     control: 7,
     ability: 'Turbo-Start: schnellerer Boost-Aufbau',
     personality: 'Mutig, neugierig, immer gut gelaunt',
+    power: 'scare',
   },
   {
     id: 'pompao',
@@ -39,6 +40,7 @@ export const PETS: Pet[] = [
     control: 9,
     ability: 'Bollwerk: stabil bei Rempler',
     personality: 'Ruhig, treu, beschützend',
+    power: 'invincible',
   },
   {
     id: 'zippo',
@@ -56,6 +58,7 @@ export const PETS: Pet[] = [
     control: 5,
     ability: 'Hasensprint: höchste Topspeed',
     personality: 'Zappelig, schnell, ungeduldig',
+    power: 'jump',
   },
   {
     id: 'drako',
@@ -73,6 +76,7 @@ export const PETS: Pet[] = [
     control: 6,
     ability: 'Feueratem: stärkerer Boost',
     personality: 'Stolz, hitzig, ehrgeizig',
+    power: 'fire',
   },
   {
     id: 'neko',
@@ -90,6 +94,7 @@ export const PETS: Pet[] = [
     control: 10,
     ability: 'Katzengriff: perfekte Drifts',
     personality: 'Elegant, clever, verspielt',
+    power: 'invincible',
   },
   // --- Über Pet-Eier freischaltbar (GLBs & earTypes der Kern-Pets wiederverwendet) ---
   {
@@ -108,6 +113,7 @@ export const PETS: Pet[] = [
     control: 7,
     ability: 'Schattenlauf: kurzer Extra-Schub',
     personality: 'Wachsam, lautlos, loyal',
+    power: 'scare',
   },
   {
     id: 'owlio',
@@ -125,6 +131,7 @@ export const PETS: Pet[] = [
     control: 9,
     ability: 'Adlerblick: ruhige Linienführung',
     personality: 'Klug, geduldig, aufmerksam',
+    power: 'jump',
   },
   {
     id: 'flami',
@@ -142,6 +149,7 @@ export const PETS: Pet[] = [
     control: 6,
     ability: 'Hitzewelle: starker Boost',
     personality: 'Quirlig, frech, heißblütig',
+    power: 'fire',
   },
   {
     id: 'pingu',
@@ -159,6 +167,7 @@ export const PETS: Pet[] = [
     control: 8,
     ability: 'Eisgriff: rutschfeste Drifts',
     personality: 'Cool, gelassen, verspielt',
+    power: 'jump',
   },
 ]
 

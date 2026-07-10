@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useLoader, useFrame } from '@react-three/fiber'
 import { PETS } from '../data/pets'
 import { asset } from '../utils/asset'
+import { spectatorPositions, SPECTATOR_COUNT } from './cheer'
 import type { TrackCurve } from './trackCurve'
 
 // Zuschauende Tiere: freigestellte Pet-Sprites, die am Streckenrand jubelnd hüpfen.
@@ -12,33 +13,21 @@ export function Spectators({ curve }: { curve: TrackCurve }) {
   texs.forEach((t) => (t.colorSpace = THREE.SRGBColorSpace))
 
   const spots = useMemo(() => {
-    const out: { x: number; z: number; i: number; ph: number; h: number }[] = []
-    const n = curve.samples.length
-    // „Tribünen" rund um den Kurs – inkl. Start/Ziel, jeweils auf BEIDEN Seiten.
-    const fracs = [0.0, 0.22, 0.45, 0.68, 0.88]
-    const base = 8.5 // klarer Streckenrand vor der Baumreihe, gut sichtbar
-    const count = 4
-    let n2 = 0
-    fracs.forEach((f, si) => {
-      const idx = Math.floor(f * n) % n
-      const p = curve.samples[idx]
-      const nor = curve.normals[idx]
-      const tan = curve.tangents[idx]
-      for (const side of [1, -1]) {
-        for (let k = 0; k < count; k++) {
-          const along = (k - (count - 1) / 2) * 1.9
-          out.push({
-            x: p.x + nor.x * base * side + tan.x * along,
-            z: p.z + nor.z * base * side + tan.z * along,
-            i: n2 % texs.length,
-            ph: si * 1.3 + k * 0.8 + (side < 0 ? 0.5 : 0),
-            h: 2.5 + (k % 2) * 0.25,
-          })
-          n2++
-        }
+    // Positionen kommen aus der geteilten reinen Funktion (auch RaceScene nutzt
+    // sie für die Jubel-Leisten-Nähe), hier nur um Sprite-Infos angereichert.
+    const positions = spectatorPositions(curve)
+    return positions.map((p, n2) => {
+      const k = n2 % SPECTATOR_COUNT
+      const si = Math.floor(n2 / (SPECTATOR_COUNT * 2))
+      const leftSide = Math.floor(n2 / SPECTATOR_COUNT) % 2 === 1
+      return {
+        x: p.x,
+        z: p.z,
+        i: n2 % texs.length,
+        ph: si * 1.3 + k * 0.8 + (leftSide ? 0.5 : 0),
+        h: 2.5 + (k % 2) * 0.25,
       }
     })
-    return out
   }, [curve, texs.length])
 
   const refs = useRef<(THREE.Sprite | null)[]>([])

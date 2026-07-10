@@ -17,6 +17,8 @@ export function Hud() {
   const intro = useHudStore((s) => s.intro)
   const speedKmh = useHudStore((s) => s.speedKmh)
   const coins = useHudStore((s) => s.coins)
+  const cheerCharge = useHudStore((s) => s.cheerCharge)
+  const powerFlash = useHudStore((s) => s.powerFlash)
   const setScreen = useGameStore((s) => s.setScreen)
   const selectedPetId = useGameStore((s) => s.selectedPetId)
   const raceMode = useGameStore((s) => s.raceMode)
@@ -106,7 +108,45 @@ export function Hud() {
             style={{ width: `${Math.round(boostCharge * 100)}%` }}
           />
         </div>
+        {/* Jubel-Leiste: füllt sich nah an den Fans, voll = Pet-Power */}
+        <div className="hud-boost-label" style={{ marginTop: 4 }}>JUBEL</div>
+        <div className="hud-boost-bar">
+          <div
+            style={{
+              width: `${Math.round(cheerCharge * 100)}%`,
+              height: '100%',
+              borderRadius: 'inherit',
+              background: cheerCharge >= 1 ? '#ffcf3f' : 'linear-gradient(90deg,#b56bff,#ff5aa0)',
+              transition: 'width 0.1s linear',
+            }}
+          />
+        </div>
       </div>
+
+      {/* Pet-Power-Flash beim Auslösen */}
+      {countdown <= 0 && powerFlash && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '38%',
+            left: '50%',
+            transform: 'translate(-50%,-50%)',
+            padding: '10px 22px',
+            borderRadius: 16,
+            background: 'rgba(12,14,28,0.78)',
+            border: '2px solid #ffcf3f',
+            color: '#fff',
+            fontWeight: 900,
+            fontSize: 26,
+            letterSpacing: 0.5,
+            textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {powerFlash}!
+        </div>
+      )}
 
       {countdown > 0 && (
         <div className="countdown">{countdown}</div>

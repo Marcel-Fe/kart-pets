@@ -14,6 +14,8 @@ interface HudState {
   speedKmh: number
   coins: number // im Rennen eingesammelte Münzen
   item: Item // gehaltenes Item (Banane, Rakete oder Schild)
+  cheerCharge: number // 0..1 Füllstand der Jubel-Leiste
+  powerFlash: string | null // kurzer Text beim Auslösen der Pet-Power (sonst null)
   set: (p: Partial<HudState>) => void
 }
 
@@ -28,5 +30,7 @@ export const useHudStore = create<HudState>((set) => ({
   speedKmh: 0,
   coins: 0,
   item: null,
+  cheerCharge: 0,
+  powerFlash: null,
   set: (p) => set(p),
 }))
