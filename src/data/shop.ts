@@ -45,11 +45,9 @@ export const SHOP: ShopSection[] = [
     ],
   },
   {
-    title: '✨ Kosmetik & Pass',
-    note: 'Rein optisch – kein Pay-to-Win',
+    title: '✨ Pass',
+    note: 'Rein optisch – kein Pay-to-Win. Kart-Lackierungen gibt es in der Garage.',
     items: [
-      { id: 'skin', name: 'Pet-Skin', emoji: '🎨', desc: 'Neuer Look für dein Pet', price: 800, currency: 'coins', color: '#b56bff', grant: { cosmetic: 'skin' } },
-      { id: 'design', name: 'Kart-Design', emoji: '🏎️', desc: 'Exklusive Kart-Lackierung', price: 1200, currency: 'coins', color: '#ff7a2f', grant: { cosmetic: 'design' } },
       { id: 'pass', name: 'Season-Pass', emoji: '🎟️', desc: 'Saison-Belohnungen & Pets', price: 9.99, currency: 'eur', color: '#36e07a', grant: { cosmetic: 'pass' } },
     ],
   },

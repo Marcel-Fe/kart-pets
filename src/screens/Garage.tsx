@@ -4,11 +4,10 @@ import { StatBar } from '../ui/StatBar'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
-import { KART_DESIGNS, designStatus } from '../data/kartDesigns'
+import { KART_DESIGNS, designStatus, designById } from '../data/kartDesigns'
+import { KartDesignPreview } from '../ui/KartDesignPreview'
 
 type UpgradeDef = (typeof UPGRADES)[number]
-
-const DEFAULT_KART = '/art/karts/viper01.png' // Starter-Kart für alle Pets ohne eigenes Kart-Bild
 
 function pctText(factor: number): string {
   return `+${Math.round((factor - 1) * 100)}%`
@@ -27,8 +26,68 @@ export function Garage() {
 
   // Welches Upgrade gerade betrachtet wird -> hebt das Kart hervor.
   const [focus, setFocus] = useState<UpgradeDef | null>(null)
+  // Lackierung, die gerade in der 3D-Vorschau gezeigt wird (auch vor dem Kauf).
+  const [previewId, setPreviewId] = useState(selectedDesign)
+  const previewDesign = designById(previewId)
 
   const pet = getPet(selectedPetId)
+
+  // Lackierungs-Auswahl (direkt unter dem Kart platziert, damit man die Vorschau sieht).
+  const paintSection = (
+    <>
+      <div className="section-head" style={{ width: '100%', maxWidth: 460, marginTop: 8 }}>
+        <h2>🎨 Lackierung</h2>
+      </div>
+      <p className="hint" style={{ width: '100%', maxWidth: 460 }}>
+        Tippe eine Lackierung an, um sie oben am Kart zu sehen. Rein optisch – kein Fahrvorteil.
+      </p>
+      <div className="shop-grid" style={{ width: '100%', maxWidth: 460 }}>
+        {KART_DESIGNS.map((d) => {
+          const status = designStatus(d, coins, ownedDesigns)
+          const active = d.id === selectedDesign
+          const previewing = d.id === previewId
+          return (
+            <div
+              key={d.id}
+              className="shop-card"
+              onClick={() => setPreviewId(d.id)}
+              style={{
+                borderColor: active ? '#ffcf3f' : previewing ? '#ffffffaa' : `${d.swatch[0]}66`,
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                className="shop-emoji"
+                style={{ background: `linear-gradient(135deg, ${d.swatch[0]} 50%, ${d.swatch[1] ?? d.swatch[0]} 50%)` }}
+              />
+              <div className="shop-name">{d.name}</div>
+              {status === 'owned' ? (
+                <button
+                  className="buy-btn shop-buy"
+                  style={{ background: active ? '#ffcf3f' : '#36e07a', color: active ? '#241800' : undefined }}
+                  disabled={active}
+                  onClick={() => selectDesign(d.id)}
+                >
+                  {active ? '✓ Aktiv' : 'Auswählen'}
+                </button>
+              ) : (
+                <button
+                  className="buy-btn shop-buy"
+                  style={{ background: d.swatch[0], opacity: status === 'buyable' ? 1 : 0.55 }}
+                  disabled={status !== 'buyable'}
+                  onClick={() => buyDesign(d.id)}
+                >
+                  🪙 {d.price}
+                </button>
+              )}
+              {status === 'insufficient' && <span className="shop-soon">zu wenig</span>}
+            </div>
+          )
+        })}
+      </div>
+    </>
+  )
+
   const lv = {
     motor: upgrades.motor ?? 0,
     reifen: upgrades.reifen ?? 0,
@@ -81,12 +140,11 @@ export function Garage() {
           <span className="lift-post right" />
           <span className="lift-plate" />
         </div>
-        {/* Jedes Pet zeigt ein echtes Kart (Standard: Viper 01), nicht mehr sein Porträt */}
-        <img
-          className={'garage-kart-img' + (focus ? ' kart-focus' : '')}
-          src={asset(pet.kartImage ?? DEFAULT_KART)}
-          alt={`${pet.name}s Kart`}
-        />
+        {/* Echtes 3D-ViperKart (drehbar) mit der aktuell gewählten Lackierung –
+            genau das Kart, das man im Rennen fährt. */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+          <KartDesignPreview accent={pet.color} body={previewDesign.body} chassis={previewDesign.chassis} />
+        </div>
         {focus && (
           <div className="kart-focus-tag" style={{ borderColor: focus.color }}>
             <span className="kart-focus-emoji">{focus.emoji}</span>
@@ -101,6 +159,9 @@ export function Garage() {
         </div>
       </div>
       <div className="pet-card-name garage-kart-name">{pet.name}s Kart</div>
+
+      {/* Lackierung direkt unter dem Kart – Antippen ändert sofort die Vorschau oben */}
+      {paintSection}
 
       {/* Kart-Werte */}
       <div className="pet-card garage-stats">
@@ -162,50 +223,6 @@ export function Garage() {
         })}
       </div>
 
-      {/* Kart-Lackierungen (Kosmetik, im Rennen sichtbar) */}
-      <div className="section-head" style={{ width: '100%', maxWidth: 460, marginTop: 8 }}>
-        <h2>🎨 Lackierung</h2>
-      </div>
-      <p className="hint" style={{ width: '100%', maxWidth: 460 }}>
-        Rein optisch – im Rennen sichtbar. Kein Fahrvorteil.
-      </p>
-      <div className="shop-grid" style={{ width: '100%', maxWidth: 460 }}>
-        {KART_DESIGNS.map((d) => {
-          const status = designStatus(d, coins, ownedDesigns)
-          const active = d.id === selectedDesign
-          return (
-            <div key={d.id} className="shop-card" style={{ borderColor: active ? '#ffcf3f' : `${d.swatch[0]}66` }}>
-              <span
-                className="shop-emoji"
-                style={{
-                  background: `linear-gradient(135deg, ${d.swatch[0]} 50%, ${d.swatch[1] ?? d.swatch[0]} 50%)`,
-                }}
-              />
-              <div className="shop-name">{d.name}</div>
-              {status === 'owned' ? (
-                <button
-                  className="buy-btn shop-buy"
-                  style={{ background: active ? '#ffcf3f' : '#36e07a', color: active ? '#241800' : undefined }}
-                  disabled={active}
-                  onClick={() => selectDesign(d.id)}
-                >
-                  {active ? '✓ Aktiv' : 'Auswählen'}
-                </button>
-              ) : (
-                <button
-                  className="buy-btn shop-buy"
-                  style={{ background: d.swatch[0], opacity: status === 'buyable' ? 1 : 0.55 }}
-                  disabled={status !== 'buyable'}
-                  onClick={() => buyDesign(d.id)}
-                >
-                  🪙 {d.price}
-                </button>
-              )}
-              {status === 'insufficient' && <span className="shop-soon">zu wenig</span>}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }

@@ -19,8 +19,12 @@ const wallet = (coins: number, diamonds: number, cos: string[] = []): Wallet => 
   ownedCosmetics: cos,
 })
 const coinItem = findShopItem('coin-s')! // 1000 Münzen für 100 💎
-const skinItem = findShopItem('skin')! // Kosmetik für 800 🪙
 const eurItem = findShopItem('dia-s')! // 500 💎 für 4,99 €
+// synthetisches Kosmetik-Item (Münz-Kauf mit cosmetic-Grant) für die Logik-Tests
+const skinItem: ShopItem = {
+  id: 'test-skin', name: 'Test-Skin', emoji: '🎨', desc: '', price: 800,
+  currency: 'coins', color: '#000', grant: { cosmetic: 'skin' },
+}
 
 // --- Store aus: alles gesperrt ---
 {

@@ -56,6 +56,20 @@ export function Shop() {
         Aufgaben, Diamanten in der Karriere. Echte Käufe sind rein optisch – kein Pay-to-Win.
       </p>
 
+      {/* Verweis auf das echte Kosmetik-Feature: Kart-Lackierungen in der Garage */}
+      <button
+        className="shop-card"
+        onClick={() => setScreen('garage')}
+        style={{ width: '100%', maxWidth: 460, cursor: 'pointer', flexDirection: 'row', gap: 12, alignItems: 'center' }}
+      >
+        <span className="shop-emoji" style={{ background: 'linear-gradient(135deg,#ff7d1e 50%,#2f6bd6 50%)' }}>🎨</span>
+        <div style={{ textAlign: 'left', flex: 1 }}>
+          <div className="shop-name">Kart-Lackierungen</div>
+          <div className="shop-desc">Dein Kart neu einkleiden – in der Garage ansehen & kaufen</div>
+        </div>
+        <span className="event-cta">Garage ›</span>
+      </button>
+
       {SHOP.map((section) => (
         <div key={section.title} className="shop-section">
           <div className="section-head">
