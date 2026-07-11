@@ -355,6 +355,41 @@ export const sfx = {
     blip(320, 0.05, 'square', 0.08)
   },
 
+  // --- Aufprall: satter, tiefer „Bums" + kurzer Rausch-Schlag (Treffer/Kollision) ---
+  impact() {
+    const c = ensure()
+    if (!c || !master) return
+    const t = c.currentTime
+    const osc = c.createOscillator()
+    const g = c.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(190, t)
+    osc.frequency.exponentialRampToValueAtTime(55, t + 0.18)
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.34, t + 0.01)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22)
+    osc.connect(g).connect(master)
+    osc.start(t)
+    osc.stop(t + 0.26)
+    const src = c.createBufferSource()
+    src.buffer = noise(c)
+    const lp = c.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = 1600
+    const ng = c.createGain()
+    ng.gain.setValueAtTime(0.26, t)
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.12)
+    src.connect(lp).connect(ng).connect(master)
+    src.start(t)
+    src.stop(t + 0.14)
+  },
+
+  // --- Belohnung: heller, aufsteigender „Ding" (z. B. Jubel-Leiste voll) ---
+  reward() {
+    ;[784, 1047, 1319].forEach((f, i) => window.setTimeout(() => blip(f, 0.18, 'sine', 0.13), i * 65))
+    window.setTimeout(() => blip(1568, 0.28, 'triangle', 0.1), 200)
+  },
+
   // --- Pet-Power: tierspezifischer Klang beim Auslösen (Jubel-Leiste voll) ---
   power(type: 'fire' | 'jump' | 'invincible' | 'scare') {
     const c = ensure()

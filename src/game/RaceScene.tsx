@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, Suspense } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Sky, Environment, Stars } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
+import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing'
+import type { ChromaticAberrationEffect } from 'postprocessing'
 import { TrackCurve } from './trackCurve'
 import { Track } from './Track'
 import { Spectators, Birds } from './Ambience'
@@ -211,6 +212,12 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const prevDrift = useRef(false) // Flanken-Erkennung: Drift losgelassen -> Auto-Boost
   const setHud = useHudStore((s) => s.set)
 
+  // --- Juice (rein optisch/akustisch, KartState unberührt) ---
+  const hitShake = useRef(0) // 1 beim Treffer, läuft aus -> Kamera-Shake + Chroma-Puls
+  const chromaRef = useRef<ChromaticAberrationEffect | null>(null)
+  const chromaOffset = useMemo(() => new THREE.Vector2(0, 0), [])
+  const cheerReady = useRef(false) // Flanke: Jubel-Leiste gerade voll -> Belohnungs-Ding
+
   // --- Sound-Zustand (Flanken-Erkennung) ---
   const sndBeep = useRef(4) // zuletzt gepiepste Countdown-Zahl (4 = noch nichts)
   const sndDrift = useRef(false)
@@ -336,6 +343,8 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
           onHit: (k) => {
             if (karts[k].isPlayer) {
               sfx.spinOut()
+              sfx.impact()
+              hitShake.current = 1 // Kamera-Ruck + Chroma-Puls
               playerHits.current += 1
             }
             if (import.meta.env.DEV) {
@@ -411,10 +420,16 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       // der Spieler löst die Pet-Power selbst aus (Power-Knopf / Taste Q), damit er
       // den richtigen Moment wählen kann. Flanke, einmal je Druck.
       cheerCharge.current = Math.min(1, cheerCharge.current + cheerGain(player.x, player.z, spectatorSpots, dt))
+      // Belohnungs-Ding, sobald die Leiste voll ist (Flanke, einmal je Ladung)
+      if (cheerCharge.current >= 1 && !cheerReady.current) {
+        cheerReady.current = true
+        sfx.reward()
+      }
       const firePower = controls.power && !prevPower.current && cheerCharge.current >= 1 && !(spin.current[0] ?? 0)
       prevPower.current = controls.power
       if (firePower) {
         cheerCharge.current = 0
+        cheerReady.current = false // nächste Ladung darf wieder „Ding" machen
         const p = player.pet.power
         powerFx.current = { type: p, time: POWER_DURATION }
         player.boostTime = Math.max(player.boostTime, POWER_BOOST)
@@ -452,6 +467,8 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       powerFx.current.time -= dt
       if (powerFx.current.time <= 0) powerFx.current = null
     }
+    // Treffer-Ruck abklingen lassen
+    if (hitShake.current > 0) hitShake.current = Math.max(0, hitShake.current - dt * 3.2)
 
     // --- Sound: Motor-Tempo, Boost, Drift ---
     sfx.engineIntensity(introing ? 0 : Math.min(1, speedKmh(player) / 82))
@@ -527,7 +544,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       const cam = camera as THREE.PerspectiveCamera
       // Blickfeld waechst mit dem Tempo (Geschwindigkeitsgefuehl) und springt beim Boost.
       const speedFov = Math.min(6, (Math.abs(player.speed) / 30) * 6)
-      const targetFov = 62 + speedFov + (boosting ? 8 : 0)
+      const targetFov = 62 + speedFov + (boosting ? 10 : 0)
       camFov.current += (targetFov - camFov.current) * Math.min(1, dt * 6)
       if (Math.abs(cam.fov - camFov.current) > 0.01) {
         cam.fov = camFov.current
@@ -538,6 +555,19 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
         camera.position.x += Math.sin(now * 0.05) * 0.06
         camera.position.y += Math.cos(now * 0.043) * 0.06
       }
+      // Treffer-Ruck: kräftiges Wackeln direkt beim Aufprall, klingt schnell aus
+      if (hitShake.current > 0) {
+        const s = hitShake.current * hitShake.current
+        camera.position.x += (Math.random() - 0.5) * s * 1.1
+        camera.position.y += (Math.random() - 0.5) * s * 0.9
+      }
+    }
+
+    // Chroma-Puls: Impuls beim Treffer, dezent beim Boost (nur Postprocessing)
+    if (chromaRef.current) {
+      const impulse = Math.max(hitShake.current, boosting ? 0.3 : 0)
+      const off = impulse * 0.006
+      chromaRef.current.offset.set(off, off)
     }
 
     // HUD aktualisieren (gedrosselt)
@@ -702,6 +732,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
 
       <EffectComposer enableNormalPass={false}>
         <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.3} mipmapBlur />
+        <ChromaticAberration ref={chromaRef} offset={chromaOffset} radialModulation={false} modulationOffset={0} />
         <Vignette eskil={false} offset={0.22} darkness={0.6} />
       </EffectComposer>
     </>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useHudStore } from '../store/hudStore'
 import { useGameStore } from '../store/gameStore'
 import { sfx } from '../audio/sfx'
@@ -36,12 +36,25 @@ export function Hud() {
   // Speed-Linien blenden ab ~55 km/h weich ein (Motor-Intensität endet bei ~82).
   const speedOpacity = Math.max(0, Math.min(1, (speedKmh - 55) / 25))
 
+  // Münz-Zähler „pumpt" kurz, wenn eine Münze eingesammelt wird (Belohnungs-Pop).
+  const [coinPop, setCoinPop] = useState(false)
+  const prevCoins = useRef(coins)
+  useEffect(() => {
+    if (coins > prevCoins.current) {
+      setCoinPop(true)
+      const t = setTimeout(() => setCoinPop(false), 280)
+      prevCoins.current = coins
+      return () => clearTimeout(t)
+    }
+    prevCoins.current = coins
+  }, [coins])
+
   return (
     <div className="hud">
       {countdown <= 0 && speedOpacity > 0 && (
         <div className="speed-lines" style={{ opacity: speedOpacity * 0.9 }} />
       )}
-      <div className="hud-coins">🪙 {coins}</div>
+      <div className={'hud-coins' + (coinPop ? ' pop' : '')}>🪙 {coins}</div>
 
       {/* Sprechblasen NUR vor dem Rennen (Intro-Kamerafahrt + Countdown), dann weg */}
       {(intro || countdown > 0) && <PreRaceDialog playerId={selectedPetId} />}
