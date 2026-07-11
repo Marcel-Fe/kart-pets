@@ -5,6 +5,7 @@ import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
 import { KART_DESIGNS, designStatus } from '../data/kartDesigns'
+import { PetModel3D } from '../ui/PetModel3D'
 
 type UpgradeDef = (typeof UPGRADES)[number]
 
@@ -37,7 +38,7 @@ export function Garage() {
         <h2>🎨 Lackierung</h2>
       </div>
       <p className="hint" style={{ width: '100%', maxWidth: 460 }}>
-        Tippe eine Lackierung an, um sie oben am Kart zu sehen. Rein optisch – kein Fahrvorteil.
+        Wähle eine Lackierung für dein Renn-Kart. Rein optisch – kein Fahrvorteil.
       </p>
       <div className="shop-grid" style={{ width: '100%', maxWidth: 460 }}>
         {KART_DESIGNS.map((d) => {
@@ -138,12 +139,11 @@ export function Garage() {
           <span className="lift-post right" />
           <span className="lift-plate" />
         </div>
-        {/* Gemaltes Kart (viper01) – das echte Kart-Artwork. */}
-        <img
-          className="garage-kart-img"
-          src={asset('/art/karts/viper01.png')}
-          alt="Kart"
-        />
+        {/* Profi-3D-Modell (drehbar): das eigene Charakter-Modell des Pets falls
+            vorhanden (z. B. Fynnox in seinem Kart), sonst sein Kart-GLB. */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+          <PetModel3D url={pet.model3d ?? pet.model} />
+        </div>
         {focus && (
           <div className="kart-focus-tag" style={{ borderColor: focus.color }}>
             <span className="kart-focus-emoji">{focus.emoji}</span>
