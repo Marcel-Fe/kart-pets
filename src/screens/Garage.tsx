@@ -4,8 +4,7 @@ import { StatBar } from '../ui/StatBar'
 import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
-import { KART_DESIGNS, designStatus, designById } from '../data/kartDesigns'
-import { KartDesignPreview } from '../ui/KartDesignPreview'
+import { KART_DESIGNS, designStatus } from '../data/kartDesigns'
 
 type UpgradeDef = (typeof UPGRADES)[number]
 
@@ -26,9 +25,8 @@ export function Garage() {
 
   // Welches Upgrade gerade betrachtet wird -> hebt das Kart hervor.
   const [focus, setFocus] = useState<UpgradeDef | null>(null)
-  // Lackierung, die gerade in der 3D-Vorschau gezeigt wird (auch vor dem Kauf).
+  // Welche Lackierung in der Auswahl gerade markiert ist.
   const [previewId, setPreviewId] = useState(selectedDesign)
-  const previewDesign = designById(previewId)
 
   const pet = getPet(selectedPetId)
 
@@ -140,11 +138,12 @@ export function Garage() {
           <span className="lift-post right" />
           <span className="lift-plate" />
         </div>
-        {/* Echtes 3D-ViperKart (drehbar) mit der aktuell gewählten Lackierung –
-            genau das Kart, das man im Rennen fährt. */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-          <KartDesignPreview accent={pet.color} body={previewDesign.body} chassis={previewDesign.chassis} />
-        </div>
+        {/* Gemaltes Kart (viper01) – das echte Kart-Artwork. */}
+        <img
+          className="garage-kart-img"
+          src={asset('/art/karts/viper01.png')}
+          alt="Kart"
+        />
         {focus && (
           <div className="kart-focus-tag" style={{ borderColor: focus.color }}>
             <span className="kart-focus-emoji">{focus.emoji}</span>

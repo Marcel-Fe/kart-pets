@@ -24,6 +24,11 @@ const WORLD_IMG: Record<string, string> = {
   vulkanrasen: '/art/worlds/vulkanrasen.png',
   skylinecity: '/art/worlds/skylinecity.png',
   sternenkolonie: '/art/worlds/sternenkolonie.png',
+  waldsprint: '/art/worlds/waldsprint.png',
+  zuckerwirbel: '/art/worlds/zuckerwirbel.png',
+  lavaring: '/art/worlds/lavaring.png',
+  gletschergleiter: '/art/worlds/gletschergleiter.png',
+  neonkreisel: '/art/worlds/neonkreisel.png',
 }
 
 // Sekundär-Funktionen ohne eigenen Screen → als „bald" markiert.
