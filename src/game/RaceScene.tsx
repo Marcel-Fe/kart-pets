@@ -158,13 +158,14 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const prevPower = useRef(false) // Flanke des Power-Knopfs
 
   // Bananen: feste auf der Fahrbahn (versetzt links/Mitte/rechts, also ausweichbar)
-  // plus freie Plätze für abgelegte Bananen.
-  const DROP_SLOTS = 8
+  // plus freie Plätze für abgelegte Bananen. Bewusst spärlich gesät – die Strecke
+  // soll fahrbar bleiben, nicht mit Bananen übersät wirken.
+  const DROP_SLOTS = 6
   const bananas = useMemo<Banana[]>(() => {
     const arr: Banana[] = []
     const n = curve.samples.length
     let k = 0
-    for (let i = 30; i < n; i += 37) {
+    for (let i = 40; i < n; i += 82) {
       const p = curve.samples[i]
       const nor = curve.normals[i]
       const lat = ((k % 3) - 1) * 3.6
