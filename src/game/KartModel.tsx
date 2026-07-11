@@ -1,8 +1,7 @@
 import { forwardRef, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useGLTF } from '@react-three/drei'
+import { Billboard, useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { PETS } from '../data/pets'
 import { PetFigure } from './PetFigure'
 import { ViperKart, KART_SEAT, type KartParts } from './ViperKart'
 import { steerFromTilt, diveFromAccel } from './kartVisual'
@@ -27,43 +26,28 @@ const SPARK_LOW = new THREE.Color('#ffae3f')
 const SPARK_HIGH = new THREE.Color('#7fd0ff')
 const SMOKE_COUNT = 10 // Puffs im wiederverwendeten Pool
 
-// Echtes 3D-Modell als komplettes Kart (Charakter + Kart, z. B. fynnox.glb):
-// normiert auf eine einheitliche Kart-Länge, Räder auf y=0. `rot` richtet die
-// Fahrtrichtung aus (Nase/Rücken nach +Z).
-function RaceKart({ url, rot }: { url: string; rot?: [number, number, number] }) {
-  const { scene } = useGLTF(asset(url))
-  const model = useMemo(() => {
-    const clone = scene.clone(true)
-    const box = new THREE.Box3().setFromObject(clone)
-    const size = new THREE.Vector3()
-    const center = new THREE.Vector3()
-    box.getSize(size)
-    box.getCenter(center)
-    // größte horizontale Ausdehnung = Kart-Länge -> auf ~3.4 Einheiten bringen
-    const horiz = Math.max(size.x, size.z)
-    const scale = 3.4 / horiz
-    clone.scale.setScalar(scale)
-    clone.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale)
-    clone.traverse((o) => {
-      const m = o as THREE.Mesh
-      if (m.isMesh) {
-        m.castShadow = true
-        m.receiveShadow = true
-      }
-    })
-    return clone
-  }, [scene])
-
+// Fahrer als gemaltes 2.5D-Sprite (Mario-Kart-Look): das Pet-Artwork von hinten
+// (raceImage) auf einer Plane, die als Billboard immer aufrecht zur Kamera schaut.
+// Nutzt Marcels gemalte Charaktere statt einer gebauten 3D-Figur.
+function DriverSprite({ url, y }: { url: string; y: number }) {
+  const tex = useTexture(asset(url))
+  tex.colorSpace = THREE.SRGBColorSpace
+  const img = tex.image as { width?: number; height?: number } | undefined
+  const aspect = img?.width && img?.height ? img.width / img.height : 0.8
+  const height = 2.4
   return (
-    <group rotation={rot ?? [0, 0, 0]}>
-      <primitive object={model} />
-    </group>
+    <Billboard position={[0, y, 0]} lockX lockZ>
+      <mesh castShadow>
+        <planeGeometry args={[height * aspect, height]} />
+        <meshBasicMaterial map={tex} transparent alphaTest={0.35} toneMapped={false} />
+      </mesh>
+    </Billboard>
   )
 }
 
 // Lädt ein echtes GLB-Kart-Modell (Kenney Car Kit, CC0) und ergänzt
 // Effekte: Boost-Flamme, Drift-Funken, Unterboden-Glow in Pet-Farbe.
-export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model3d, model3dRot, kart, bodyColor, chassisColor }, ref) => {
+export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, raceImage, kart, bodyColor, chassisColor }, ref) => {
   // Fahrer sind echt 3D: eigenes GLB falls vorhanden, sonst die gebaute PetFigure.
   const KART_SCALE = 1.15
   const seat = KART_SEAT
@@ -225,25 +209,23 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
     <group ref={ref}>
       <group>
         {/* Federung: das ganze Kart nickt beim Bremsen und wankt in der Kurve. */}
-        {model3d ? (
-          // Hat das Pet ein eigenes, sauberes 3D-Modell (z. B. Fynnox in seinem
-          // Kart), fährt es das echte Modell – deutlich wertiger als die Bauform.
-          <group ref={bodyRef}>
-            <RaceKart url={model3d} rot={model3dRot} />
+        {/* Einheitlicher 2.5D-Look: stabiles Kart + gemaltes Pet-Sprite (Mario-Kart). */}
+        <group ref={bodyRef}>
+          <group scale={KART_SCALE}>
+            <ViperKart accent={color} parts={parts} body={bodyColor} chassis={chassisColor} />
           </group>
-        ) : (
-          // Sonst: selbstgebautes Kart + gebaute Fahrerfigur (stabil, kein GLB).
-          <>
-            <group ref={bodyRef}>
-              <group scale={KART_SCALE}>
-                <ViperKart accent={color} parts={parts} body={bodyColor} chassis={chassisColor} />
-              </group>
-            </group>
-            <group position={seatPos} scale={1.5}>
+        </group>
+        <group position={seatPos}>
+          {raceImage ? (
+            // Marcels gemaltes Pet von hinten als Sprite (nutzt sein Artwork).
+            <DriverSprite url={raceImage} y={0.7} />
+          ) : (
+            // Fallback ohne Artwork: gebaute Fahrerfigur.
+            <group scale={1.5}>
               <PetFigure earType={earType} color={color} driving />
             </group>
-          </>
-        )}
+          )}
+        </group>
       </group>
 
       {/* Unterboden-Glow in Pet-Farbe */}
@@ -285,8 +267,3 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
 })
 
 KartModel.displayName = 'KartModel'
-
-// Vorhandene Pet-3D-Modelle vorab laden (Kart ist jetzt selbstgebaut, kein GLB nötig).
-PETS.forEach((p) => {
-  if (p.model3d) useGLTF.preload(asset(p.model3d))
-})
