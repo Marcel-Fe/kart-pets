@@ -5,7 +5,6 @@ import { getPet } from '../data/pets'
 import { asset } from '../utils/asset'
 import { UPGRADES, effectFor, costFor } from '../data/upgrades'
 import { KART_DESIGNS, designStatus } from '../data/kartDesigns'
-import { PetModel3D } from '../ui/PetModel3D'
 
 type UpgradeDef = (typeof UPGRADES)[number]
 
@@ -139,11 +138,8 @@ export function Garage() {
           <span className="lift-post right" />
           <span className="lift-plate" />
         </div>
-        {/* Profi-3D-Modell (drehbar): das eigene Charakter-Modell des Pets falls
-            vorhanden (z. B. Fynnox in seinem Kart), sonst sein Kart-GLB. */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-          <PetModel3D url={pet.model3d ?? pet.model} />
-        </div>
+        {/* Gemaltes Kart-Artwork (viper01) – Marcels bevorzugter Look. */}
+        <img className="garage-kart-img" src={asset('/art/karts/viper01.png')} alt="Kart" />
         {focus && (
           <div className="kart-focus-tag" style={{ borderColor: focus.color }}>
             <span className="kart-focus-emoji">{focus.emoji}</span>
