@@ -33,7 +33,7 @@ export const CAREER: CareerChapter[] = [
     races: [
       { trackId: 'fluesterwald', goalPlace: 3, goalCoins: 6, intro: 'Dein allererstes Rennen. Zeig, dass du hierher gehörst.' },
       { trackId: 'waldsprint', goalPlace: 2, goalCoins: 8, intro: 'Die Leute schauen zu. Ein guter Platz macht neugierig.' },
-      { trackId: 'baumkronenkurve', goalPlace: 1, goalCoins: 8, intro: 'Drako lacht über den „Neuling". Stopf ihm das Maul – mit einem Sieg.' },
+      { trackId: 'fluesterwald', goalPlace: 1, goalCoins: 8, intro: 'Drako lacht über den „Neuling". Stopf ihm das Maul – mit einem Sieg.' },
     ],
   },
   {
@@ -45,7 +45,7 @@ export const CAREER: CareerChapter[] = [
     races: [
       { trackId: 'candychaos', goalPlace: 3, goalCoins: 9, intro: 'Neues Terrain, klebrige Kurven. Ruhig bleiben.' },
       { trackId: 'zuckerwirbel', goalPlace: 2, goalCoins: 10, intro: 'Die Fans rufen deinen Namen. Enttäusch sie nicht.' },
-      { trackId: 'karamellkurve', goalPlace: 1, goalCoins: 10, intro: 'Drako: „Zufallssiege." Beweis, dass es keiner war.' },
+      { trackId: 'candychaos', goalPlace: 1, goalCoins: 10, intro: 'Drako: „Zufallssiege." Beweis, dass es keiner war.' },
     ],
   },
   {
@@ -57,7 +57,7 @@ export const CAREER: CareerChapter[] = [
     races: [
       { trackId: 'vulkanrasen', goalPlace: 3, goalCoins: 11, intro: 'Hitze, Asche, enge Ränge. Volle Konzentration.' },
       { trackId: 'lavaring', goalPlace: 2, goalCoins: 12, intro: 'Ein Sturz hier kostet alles. Fahr sauber.' },
-      { trackId: 'ascheweg', goalPlace: 1, goalCoins: 12, intro: 'Drako spürt die Bedrohung. Er fährt härter denn je.' },
+      { trackId: 'vulkanrasen', goalPlace: 1, goalCoins: 12, intro: 'Drako spürt die Bedrohung. Er fährt härter denn je.' },
     ],
   },
   {
@@ -68,8 +68,8 @@ export const CAREER: CareerChapter[] = [
     requiredStars: 16,
     races: [
       { trackId: 'gletschergleiter', goalPlace: 2, goalCoins: 12, intro: 'Eiskalt und schnell. Nur die Besten sind noch dabei.' },
-      { trackId: 'polarpiste', goalPlace: 1, goalCoins: 13, intro: 'Der Titel ist zum Greifen nah. Halt den Kopf klar.' },
-      { trackId: 'hochhaushatz', goalPlace: 1, goalCoins: 14, intro: 'Das FINALE gegen Drako. Alles oder nichts – werde berühmt.' },
+      { trackId: 'skylinecity', goalPlace: 1, goalCoins: 13, intro: 'Der Titel ist zum Greifen nah. Halt den Kopf klar.' },
+      { trackId: 'neonkreisel', goalPlace: 1, goalCoins: 14, intro: 'Das FINALE gegen Drako. Alles oder nichts – werde berühmt.' },
     ],
   },
 ]
