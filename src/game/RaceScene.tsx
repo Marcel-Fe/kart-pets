@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, Suspense } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Sky, Environment, Stars } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing'
-import type { ChromaticAberrationEffect } from 'postprocessing'
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import { TrackCurve } from './trackCurve'
 import { Track } from './Track'
 import { Spectators, Birds } from './Ambience'
@@ -213,9 +212,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   const setHud = useHudStore((s) => s.set)
 
   // --- Juice (rein optisch/akustisch, KartState unberührt) ---
-  const hitShake = useRef(0) // 1 beim Treffer, läuft aus -> Kamera-Shake + Chroma-Puls
-  const chromaRef = useRef<ChromaticAberrationEffect | null>(null)
-  const chromaOffset = useMemo(() => new THREE.Vector2(0, 0), [])
+  const hitShake = useRef(0) // 1 beim Treffer, läuft aus -> Kamera-Shake
   const cheerReady = useRef(false) // Flanke: Jubel-Leiste gerade voll -> Belohnungs-Ding
 
   // --- Sound-Zustand (Flanken-Erkennung) ---
@@ -563,12 +560,6 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       }
     }
 
-    // Chroma-Puls: Impuls beim Treffer, dezent beim Boost (nur Postprocessing)
-    if (chromaRef.current) {
-      const impulse = Math.max(hitShake.current, boosting ? 0.3 : 0)
-      const off = impulse * 0.006
-      chromaRef.current.offset.set(off, off)
-    }
 
     // HUD aktualisieren (gedrosselt)
     hudTimer.current -= dt
@@ -732,7 +723,6 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
 
       <EffectComposer enableNormalPass={false}>
         <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.3} mipmapBlur />
-        <ChromaticAberration ref={chromaRef} offset={chromaOffset} radialModulation={false} modulationOffset={0} />
         <Vignette eskil={false} offset={0.22} darkness={0.6} />
       </EffectComposer>
     </>

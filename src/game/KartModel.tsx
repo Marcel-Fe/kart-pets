@@ -27,9 +27,10 @@ const SPARK_LOW = new THREE.Color('#ffae3f')
 const SPARK_HIGH = new THREE.Color('#7fd0ff')
 const SMOKE_COUNT = 10 // Puffs im wiederverwendeten Pool
 
-// Echtes 3D-Pet-GLB (Meshy/TripoSR): normalisiert Größe+Position (Box3) und richtet
-// es per Rotations-Offset in Fahrtrichtung (+Z) aus → man sieht den Rücken.
-function RacePet({ url, rot }: { url: string; rot?: [number, number, number] }) {
+// Echtes 3D-Modell als komplettes Kart (Charakter + Kart, z. B. fynnox.glb):
+// normiert auf eine einheitliche Kart-Länge, Räder auf y=0. `rot` richtet die
+// Fahrtrichtung aus (Nase/Rücken nach +Z).
+function RaceKart({ url, rot }: { url: string; rot?: [number, number, number] }) {
   const { scene } = useGLTF(asset(url))
   const model = useMemo(() => {
     const clone = scene.clone(true)
@@ -38,9 +39,10 @@ function RacePet({ url, rot }: { url: string; rot?: [number, number, number] }) 
     const center = new THREE.Vector3()
     box.getSize(size)
     box.getCenter(center)
-    const scale = 1.3 / Math.max(size.x, size.y, size.z)
+    // größte horizontale Ausdehnung = Kart-Länge -> auf ~3.4 Einheiten bringen
+    const horiz = Math.max(size.x, size.z)
+    const scale = 3.4 / horiz
     clone.scale.setScalar(scale)
-    // in x/z zentrieren, mit den Füßen auf y=0 (= Kart-Sitz)
     clone.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale)
     clone.traverse((o) => {
       const m = o as THREE.Mesh
@@ -223,23 +225,24 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
     <group ref={ref}>
       <group>
         {/* Federung: das ganze Kart nickt beim Bremsen und wankt in der Kurve. */}
-        <group ref={bodyRef}>
-          {/* Selbstgebautes Viper-Kart, Nase in Fahrtrichtung. Kart-Design (nur
-              Spieler) überschreibt die Grundfarben, sonst Standard-Lackierung. */}
-          <group scale={KART_SCALE}>
-            <ViperKart accent={color} parts={parts} body={bodyColor} chassis={chassisColor} />
-          </group>
-        </group>
         {model3d ? (
-          // Echtes 3D-Modell, falls vorhanden
-          <group position={seatPos} scale={1.8}>
-            <RacePet url={model3d} rot={model3dRot} />
+          // Hat das Pet ein eigenes, sauberes 3D-Modell (z. B. Fynnox in seinem
+          // Kart), fährt es das echte Modell – deutlich wertiger als die Bauform.
+          <group ref={bodyRef}>
+            <RaceKart url={model3d} rot={model3dRot} />
           </group>
         ) : (
-          // Sonst die aus Grundformen gebaute 3D-Figur in Fahrer-Pose
-          <group position={seatPos} scale={1.5}>
-            <PetFigure earType={earType} color={color} driving />
-          </group>
+          // Sonst: selbstgebautes Kart + gebaute Fahrerfigur (stabil, kein GLB).
+          <>
+            <group ref={bodyRef}>
+              <group scale={KART_SCALE}>
+                <ViperKart accent={color} parts={parts} body={bodyColor} chassis={chassisColor} />
+              </group>
+            </group>
+            <group position={seatPos} scale={1.5}>
+              <PetFigure earType={earType} color={color} driving />
+            </group>
+          </>
         )}
       </group>
 
