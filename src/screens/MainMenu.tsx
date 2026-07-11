@@ -9,6 +9,7 @@ import { PetPuppet } from '../ui/PetPuppet'
 import { asset } from '../utils/asset'
 import { levelFromXp, STAGE_EMOJI, playerLevelFromPoints } from '../data/progression'
 import { POWER_META } from '../game/cheer'
+import { APP_VERSION } from '../version'
 import type { Rarity, Screen } from '../types'
 
 const RARITY_COLOR: Record<Rarity, string> = {
@@ -104,6 +105,9 @@ export function MainMenu() {
         </div>
         <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#ffc23f' }}>
           Das große Abenteuer
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.5, color: '#ffffff55', marginTop: 1 }}>
+          {APP_VERSION}
         </div>
       </div>
 
