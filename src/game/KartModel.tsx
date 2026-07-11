@@ -107,9 +107,9 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
     const dt = Math.max(1e-4, Math.min(delta, 0.05))
 
     // --- Fahrdynamik ---
-    // Räder drehen sich mit dem Tempo (Umfangsgeschwindigkeit / Radius).
+    // Räder ROLLEN mit dem Tempo um ihre Achse (X), nicht gieren um Y.
     const spinRate = kart.speed / 0.46
-    for (const w of parts.spin) if (w) w.rotation.y -= spinRate * dt
+    for (const w of parts.spin) if (w) w.rotation.x += spinRate * dt
 
     // Lenkwinkel direkt aus der Karosserie-Neigung (visualTilt) ableiten – die
     // trägt den Lenkeinschlag bereits (raceSim.applyCommon), bildraten-unabhängig.
@@ -128,7 +128,7 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, model
     if (import.meta.env.DEV && kart.isPlayer) {
       // Nur fuer automatisierte Tests: Rad- und Lenkstellung des Spielers.
       const w = window as unknown as { __wheel?: number; __steer?: number; __dive?: number }
-      w.__wheel = parts.spin[0]?.rotation.y ?? 0
+      w.__wheel = parts.spin[0]?.rotation.x ?? 0
       w.__steer = steerVis.current
       w.__dive = dive.current
     }
