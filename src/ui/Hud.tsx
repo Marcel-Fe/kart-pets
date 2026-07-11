@@ -56,11 +56,12 @@ export function Hud() {
       )}
       <div className={'hud-coins' + (coinPop ? ' pop' : '')}>🪙 {coins}</div>
 
-      {/* Sprechblasen NUR vor dem Rennen (Intro-Kamerafahrt + Countdown), dann weg */}
-      {(intro || countdown > 0) && <PreRaceDialog playerId={selectedPetId} />}
+      {/* Sprechblasen NUR während der Intro-Kamerafahrt – sobald der Countdown
+          3-2-1 läuft, sind sie weg und die Sicht auf die Strecke ist frei. */}
+      {intro && <PreRaceDialog playerId={selectedPetId} />}
 
-      {/* Karriere-Story: kurzer Erzähler-Beat vor dem Start */}
-      {(intro || countdown > 0) && careerIntro && (
+      {/* Karriere-Story: kurzer Erzähler-Beat, ebenfalls nur während der Kamerafahrt */}
+      {intro && careerIntro && (
         <div
           style={{
             position: 'absolute',

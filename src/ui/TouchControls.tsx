@@ -28,6 +28,10 @@ export function TouchControls() {
   // Pet-Power: Knopf erscheint nur, wenn die Jubel-Leiste voll ist.
   const powerReady = useHudStore((s) => s.cheerCharge) >= 1
   const power = POWER_META[getPet(useGameStore((s) => s.selectedPetId)).power]
+  // Steuerung erst ab "GO" zeigen. Vorher (Intro-Kamerafahrt + Countdown) laufen
+  // die Vorstell-Sprechblasen unten – sonst liegen sie auf den Steuer-Tasten.
+  const beforeStart = useHudStore((s) => s.intro || s.countdown > 0)
+  if (beforeStart) return null
 
   return (
     <div className="touch-layer">
