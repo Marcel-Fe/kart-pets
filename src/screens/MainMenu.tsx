@@ -258,9 +258,13 @@ export function MainMenu() {
               ) : (
                 <div
                   className="world-card-img track-card-ph"
-                  style={{ background: `linear-gradient(135deg, ${t.theme.hemiSky}, ${t.theme.accent})` }}
+                  style={{
+                    background: `radial-gradient(115% 85% at 80% 12%, ${t.theme.accent}dd, transparent 58%), linear-gradient(158deg, ${t.theme.hemiSky} 0%, ${t.theme.hemiGround} 62%, #0a0e2c 100%)`,
+                  }}
                 >
                   <span className="track-ph-emoji">{DECOR_EMOJI[t.theme.decor]}</span>
+                  <span className={'track-ph-diff diff-' + t.difficulty}>{t.difficulty}</span>
+                  <span className="track-ph-name">{t.name}</span>
                 </div>
               )}
               {locked && (
