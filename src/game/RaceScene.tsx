@@ -616,7 +616,9 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
   })
 
   const theme = track.theme
-  const dirIntensity = theme.sky === 'night' ? 0.6 : theme.sky === 'sunset' ? 1.1 : 1.5
+  // Ausgewogen: Nachtstrecken deutlich heller (man muss die Strecke sehen),
+  // Tagstrecken etwas gedämpft, damit nichts überstrahlt.
+  const dirIntensity = theme.sky === 'night' ? 0.95 : theme.sky === 'sunset' ? 1.15 : 1.35
 
   return (
     <>
@@ -634,8 +636,10 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       <Suspense fallback={null}>
         <Environment preset={theme.envPreset} background={false} environmentIntensity={0.9} />
       </Suspense>
-      <ambientLight intensity={theme.ambient} />
-      <hemisphereLight args={[theme.hemiSky, theme.hemiGround, 0.5]} />
+      {/* Grundhelligkeit nie unter einen Mindestwert – sonst „versinkt" die
+          Nachtstrecke im Schwarz und man erkennt den Kurvenverlauf nicht mehr. */}
+      <ambientLight intensity={Math.max(theme.ambient, 0.38)} />
+      <hemisphereLight args={[theme.hemiSky, theme.hemiGround, 0.62]} />
       <directionalLight
         position={[80, 110, 50]}
         intensity={dirIntensity}
@@ -722,7 +726,7 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
       ))}
 
       <EffectComposer enableNormalPass={false}>
-        <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.3} mipmapBlur />
+        <Bloom intensity={0.38} luminanceThreshold={0.9} luminanceSmoothing={0.3} mipmapBlur />
         <Vignette eskil={false} offset={0.22} darkness={0.6} />
       </EffectComposer>
     </>

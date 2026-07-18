@@ -54,6 +54,8 @@ interface PartDef {
   color?: string
   vary?: boolean
   wind?: number
+  /** Leuchtkraft pulsiert (Lava-Glut, Neon-Reklame). Wert = Geschwindigkeit. */
+  pulse?: number
   roughness?: number
   metalness?: number
   flatShading?: boolean
@@ -133,10 +135,10 @@ function buildParts(items: Deco[], decor: string): { def: PartDef; inst: Inst[] 
   }
 
   if (decor === 'candy') {
-    const stick = P({ geom: new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8), color: '#ffffff' })
-    const ball = P({ geom: new THREE.SphereGeometry(0.7, 16, 16), vary: true, roughness: 0.2, metalness: 0.1, shadow: true })
-    const gum = P({ geom: new THREE.ConeGeometry(0.9, 1.6, 16), vary: true, roughness: 0.25, shadow: true })
-    const cand = P({ geom: new THREE.SphereGeometry(0.8, 16, 16), vary: true, roughness: 0.2, metalness: 0.2, shadow: true })
+    const stick = P({ geom: new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8), color: '#ffffff', wind: 0.012 })
+    const ball = P({ geom: new THREE.SphereGeometry(0.7, 16, 16), vary: true, roughness: 0.2, metalness: 0.1, wind: 0.018, shadow: true })
+    const gum = P({ geom: new THREE.ConeGeometry(0.9, 1.6, 16), vary: true, roughness: 0.25, wind: 0.012, shadow: true })
+    const cand = P({ geom: new THREE.SphereGeometry(0.8, 16, 16), vary: true, roughness: 0.2, metalness: 0.2, wind: 0.01, shadow: true })
     for (const d of items) {
       const c = new THREE.Color(CANDY[(d.variant + Math.round(d.x)) % CANDY.length])
       if (d.variant === 0) {
@@ -150,8 +152,8 @@ function buildParts(items: Deco[], decor: string): { def: PartDef; inst: Inst[] 
 
   if (decor === 'volcano') {
     const rock = P({ geom: new THREE.DodecahedronGeometry(1), color: '#4a423e', roughness: 1, flatShading: true, shadow: true })
-    const lava = P({ geom: new THREE.CircleGeometry(1.4, 16), color: '#ff5a1f', emissive: '#ff6a1f', emissiveIntensity: 1.6 })
-    const dead = P({ geom: new THREE.CylinderGeometry(0.18, 0.3, 2.8, 6), color: '#2a1c16', shadow: true })
+    const lava = P({ geom: new THREE.CircleGeometry(1.4, 16), color: '#ff5a1f', emissive: '#ff6a1f', emissiveIntensity: 1.6, pulse: 1.1 })
+    const dead = P({ geom: new THREE.CylinderGeometry(0.18, 0.3, 2.8, 6), color: '#2a1c16', wind: 0.01, shadow: true })
     for (const d of items) {
       if (d.variant === 0) rock.inst.push({ m: mat(d, [0, 0.6, 0], undefined, e.set(d.rot, d.rot, 0)) })
       else if (d.variant === 1) lava.inst.push({ m: mat(d, [0, 0.07 / d.s, 0], undefined, e.set(-Math.PI / 2, 0, d.rot)) })
@@ -179,9 +181,9 @@ function buildParts(items: Deco[], decor: string): { def: PartDef; inst: Inst[] 
   }
 
   // city
-  const sign = P({ geom: new THREE.BoxGeometry(0.4, 1.6, 0.4), color: '#ff2fa0', emissive: '#ff2fa0', emissiveIntensity: 1.4, shadow: true })
+  const sign = P({ geom: new THREE.BoxGeometry(0.4, 1.6, 0.4), color: '#ff2fa0', emissive: '#ff2fa0', emissiveIntensity: 1.4, pulse: 2.3, shadow: true })
   const tower = P({ geom: new THREE.BoxGeometry(1, 1, 1), color: '#0e1330', shadow: true })
-  const wire = P({ geom: new THREE.BoxGeometry(1, 1, 1), vary: true, emissive: '#ffffff', emissiveIntensity: 1.1, wireframe: true })
+  const wire = P({ geom: new THREE.BoxGeometry(1, 1, 1), vary: true, emissive: '#ffffff', emissiveIntensity: 1.1, pulse: 1.6, wireframe: true })
   for (const d of items) {
     if (d.variant === 2) {
       sign.inst.push({ m: mat(d, [0, 1.5, 0]) })
@@ -202,6 +204,17 @@ function buildParts(items: Deco[], decor: string): { def: PartDef; inst: Inst[] 
 function Part({ def, inst }: { def: PartDef; inst: Inst[] }) {
   const ref = useRef<THREE.InstancedMesh>(null)
   const material = useMemo(() => makeMaterial(def), [def])
+
+  // Glut/Neon atmen lassen: ein Material-Wert je Bild, unabhängig von der
+  // Instanz-Anzahl – kostet praktisch nichts.
+  const baseGlow = def.emissiveIntensity ?? 1
+  useFrame(({ clock }) => {
+    if (!def.pulse) return
+    const t = clock.elapsedTime
+    const slow = Math.sin(t * def.pulse)
+    const flicker = Math.sin(t * def.pulse * 4.7 + 1.3) * 0.12
+    material.emissiveIntensity = baseGlow * (1 + slow * 0.3 + flicker)
+  })
 
   useLayoutEffect(() => {
     const im = ref.current

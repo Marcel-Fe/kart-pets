@@ -29,18 +29,57 @@ const SMOKE_COUNT = 10 // Puffs im wiederverwendeten Pool
 // Fahrer als gemaltes 2.5D-Sprite (Mario-Kart-Look): das Pet-Artwork von hinten
 // (raceImage) auf einer Plane, die als Billboard immer aufrecht zur Kamera schaut.
 // Nutzt Marcels gemalte Charaktere statt einer gebauten 3D-Figur.
-function DriverSprite({ url, y }: { url: string; y: number }) {
+function DriverSprite({ url, y, kart }: { url: string; y: number; kart: KartState }) {
   const tex = useTexture(asset(url))
   tex.colorSpace = THREE.SRGBColorSpace
   const img = tex.image as { width?: number; height?: number } | undefined
   const aspect = img?.width && img?.height ? img.width / img.height : 0.8
   const height = 2.4
+
+  // Lebendiger Fahrer: neigt sich in die Kurve, wippt mit dem Tempo, duckt sich
+  // im Drift und macht beim Boost einen Freuden-Hüpfer.
+  const inner = useRef<THREE.Group>(null)
+  const lean = useRef(0)
+  const hop = useRef(0)
+  const wasBoosting = useRef(false)
+
+  useFrame((_, delta) => {
+    const g = inner.current
+    if (!g) return
+    const dt = Math.max(1e-4, Math.min(delta, 0.05))
+    const t = performance.now() * 0.001
+    const fast = Math.min(1, Math.abs(kart.speed) / 18)
+
+    // Kurvenneigung (visualTilt trägt den Lenkeinschlag bereits), im Drift stärker
+    const target = steerFromTilt(kart.visualTilt) * (kart.drifting ? 1.5 : 1.0)
+    lean.current += (target - lean.current) * Math.min(1, dt * 10)
+    g.rotation.z = -lean.current
+
+    // Boost-Start löst einen Hüpfer aus, der weich ausklingt
+    const boosting = kart.boostTime > 0
+    if (boosting && !wasBoosting.current) hop.current = 1
+    wasBoosting.current = boosting
+    hop.current = Math.max(0, hop.current - dt * 2.2)
+    const jump = Math.sin(hop.current * Math.PI) * 0.22
+
+    // Wippen: schneller und höher, je flotter das Kart fährt
+    const bob = Math.sin(t * 9 + kart.x * 0.3) * 0.035 * fast
+    g.position.y = bob + jump
+
+    // Im Drift duckt sich der Fahrer leicht, beim Boost streckt er sich
+    const duck = kart.drifting ? 0.94 : 1
+    const stretch = 1 + jump * 0.5
+    g.scale.set(1, duck * stretch, 1)
+  })
+
   return (
     <Billboard position={[0, y, 0]} lockX lockZ>
-      <mesh castShadow>
-        <planeGeometry args={[height * aspect, height]} />
-        <meshBasicMaterial map={tex} transparent alphaTest={0.35} toneMapped={false} />
-      </mesh>
+      <group ref={inner}>
+        <mesh castShadow>
+          <planeGeometry args={[height * aspect, height]} />
+          <meshBasicMaterial map={tex} transparent alphaTest={0.35} toneMapped={false} />
+        </mesh>
+      </group>
     </Billboard>
   )
 }
@@ -218,7 +257,7 @@ export const KartModel = forwardRef<THREE.Group, Props>(({ color, earType, raceI
         <group position={seatPos}>
           {raceImage ? (
             // Marcels gemaltes Pet von hinten als Sprite (nutzt sein Artwork).
-            <DriverSprite url={raceImage} y={0.7} />
+            <DriverSprite url={raceImage} y={0.7} kart={kart} />
           ) : (
             // Fallback ohne Artwork: gebaute Fahrerfigur.
             <group scale={1.5}>
