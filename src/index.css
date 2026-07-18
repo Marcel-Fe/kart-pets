@@ -2242,8 +2242,8 @@ body::after {
   z-index: 2;
   align-self: end;
   margin-bottom: 52px;      /* Kart steht auf der Hebebühne */
-  max-width: 62%;
-  max-height: 152px;
+  max-width: 54%;
+  max-height: 124px;
   object-fit: contain;
   filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.6));
   animation: kart-reveal 0.9s cubic-bezier(.2,.7,.3,1) 0.9s both,

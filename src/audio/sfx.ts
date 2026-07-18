@@ -17,14 +17,25 @@ let drift: { src: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNod
 export type Mood = 'menu' | 'race'
 let music: { mood: Mood; gain: GainNode; timer: number; next: number; step: number } | null = null
 
-// Vier Akkorde (I – vi – IV – V in C-Dur): [Bass, Terz/Quinte, Oberstimme]
+// Acht Akkorde (I–vi–IV–V–I–iii–ii–V in C-Dur): [Bass, Terz/Quinte, Oberstimme].
+// Doppelt so lange Schleife wie zuvor -> klingt deutlich weniger monoton.
 const CHORDS = [
   [130.81, 261.63, 329.63], // C
   [110.0, 220.0, 261.63], // Am
   [87.31, 174.61, 220.0], // F
   [98.0, 196.0, 246.94], // G
+  [130.81, 261.63, 392.0], // C (mit Quinte oben)
+  [82.41, 164.81, 246.94], // Em
+  [73.42, 146.83, 220.0], // Dm
+  [98.0, 196.0, 293.66], // G (mit Sekunde oben)
 ]
-const STEPS_PER_CHORD = 8 // Achtelnoten je Akkord -> 32 Schritte pro Schleife
+const STEPS_PER_CHORD = 8 // Achtelnoten je Akkord -> 64 Schritte pro Schleife
+
+// Melodie-Motiv je Achtel. Zahl = Ton aus dem Akkord (1 = Terz, 2 = Oberstimme,
+// 3 = Oberstimme eine Oktave höher), null = Pause. Die Pausen machen die Melodie
+// luftig statt hämmernd – vorher wechselten stur zwei Töne auf jedem Schlag.
+const MELODY_A: (number | null)[] = [2, null, 1, null, 3, null, 2, null]
+const MELODY_B: (number | null)[] = [3, null, 2, 1, null, 2, null, null]
 
 function loadEnabled(): boolean {
   try {
@@ -126,20 +137,24 @@ function scheduleMusic() {
   while (music.next < c.currentTime + 0.15) {
     const s = music.step
     const at = music.next
-    const chord = CHORDS[Math.floor(s / STEPS_PER_CHORD) % CHORDS.length]
+    const chordIdx = Math.floor(s / STEPS_PER_CHORD) % CHORDS.length
+    const chord = CHORDS[chordIdx]
     const inChord = s % STEPS_PER_CHORD
 
     // Bass auf Zählzeit 1 und 3
     if (inChord === 0 || inChord === 4) {
-      tone(chord[0], at, fast ? 0.28 : 0.5, fast ? 0.14 : 0.1, 'triangle', bus)
+      tone(chord[0], at, fast ? 0.28 : 0.5, fast ? 0.13 : 0.09, 'triangle', bus)
     }
-    // Melodie: wechselnd Terz/Oberstimme, im Rennen dichter
-    if (fast || inChord % 2 === 0) {
-      const mel = chord[1 + (s % 2)]
-      tone(mel, at, fast ? 0.16 : 0.34, fast ? 0.055 : 0.045, 'square', bus)
+    // Melodie: echtes Motiv mit Pausen, weicher Dreieck-Klang statt hartem
+    // Square – das schrille Dauergedudel war der Hauptgrund fürs Nerven.
+    const pattern = chordIdx % 2 === 0 ? MELODY_A : MELODY_B
+    const step = pattern[inChord]
+    if (step !== null) {
+      const freq = step === 3 ? chord[2] * 2 : chord[step]
+      tone(freq, at, fast ? 0.22 : 0.36, fast ? 0.042 : 0.034, 'triangle', bus)
     }
-    // Beat nur im Rennen
-    if (fast) hat(at, inChord % 2 === 0 ? 0.035 : 0.018, bus)
+    // Beat nur im Rennen – dezent, nur auf den geraden Achteln
+    if (fast && inChord % 2 === 0) hat(at, 0.022, bus)
 
     music.next += stepDur
     music.step = (s + 1) % (CHORDS.length * STEPS_PER_CHORD)
@@ -159,7 +174,7 @@ export const sfx = {
     const gain = c.createGain()
     gain.gain.value = 0
     gain.connect(master)
-    gain.gain.setTargetAtTime(mood === 'race' ? 0.5 : 0.34, c.currentTime, 0.6)
+    gain.gain.setTargetAtTime(mood === 'race' ? 0.32 : 0.24, c.currentTime, 0.6)
     music = { mood, gain, timer: 0, next: c.currentTime + 0.06, step: 0 }
     scheduleMusic()
     music.timer = window.setInterval(scheduleMusic, 25)
