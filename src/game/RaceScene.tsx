@@ -668,8 +668,6 @@ export function RaceScene({ track, playerPet, playerLevel, playerUpgrades, oppon
             earType={k.pet.earType}
             cutImage={k.pet.cutImage}
             raceImage={k.pet.raceImage}
-            model3d={k.pet.model3d}
-            model3dRot={k.pet.model3dRot}
             kart={k}
             bodyColor={k.isPlayer ? playerDesign?.body : undefined}
             chassisColor={k.isPlayer ? playerDesign?.chassis : undefined}

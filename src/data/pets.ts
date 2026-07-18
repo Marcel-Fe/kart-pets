@@ -14,8 +14,6 @@ export const PETS: Pet[] = [
     cutImage: '/art/pets-cut/fynnox.png',
     raceImage: '/art/pets-back/fynnox.png',
     kartImage: '/art/karts/viper01.png',
-    model3d: '/models/pets/fynnox_hd.glb',
-    model3dRot: [0, Math.PI, 0], // Fynnox blickt sonst zur Kamera -> 180° drehen (Rücken zeigen)
     model: '/models/kart-oobi.glb',
     earType: 'fox',
     speed: 7,

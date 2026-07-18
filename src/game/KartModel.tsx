@@ -15,8 +15,6 @@ interface Props {
   earType: EarType
   cutImage?: string
   raceImage?: string
-  model3d?: string
-  model3dRot?: [number, number, number]
   kart: KartState
   bodyColor?: string // Kart-Design: Lackierung Motorhaube/Nase (nur Spieler)
   chassisColor?: string // Kart-Design: Lackierung Chassis/Seitenkästen (nur Spieler)
