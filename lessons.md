@@ -30,6 +30,24 @@ Verlässlich sind dann NUR: (a) Draw-Calls/`pageerror` per rAF zählen (multi-ru
 Viewport (700×500). Die Garage (eigener PetModel3D-Canvas, ein Modell) ist dagegen
 problemlos screenshotbar.
 
+## Die Fahrphysik-Konstanten hängen aneinander — 2026-07-18
+`ACCEL` von 26 auf 14.5 gesenkt (für mehr Schwung) — prompt blieb das Kart im Gras auf
+**0 km/h** stehen statt nur langsamer zu werden. Ursache: `GRASS_DRAG` (22) war stillschweigend
+gegen das alte `ACCEL` kalibriert. Solange `GRASS_DRAG > ACCEL`, ist die Netto-Beschleunigung
+im Gras dauerhaft negativ → das Kart wird abgewürgt und kommt nie wieder heraus.
+**Regel:** `GRASS_DRAG` muss immer deutlich unter `ACCEL` liegen; die Klemme auf `OFFTRACK_MAX`
+macht den Ausflug ins Grüne teuer genug. Nach JEDER Änderung an `ACCEL`/`COAST`/`DRAG` die
+anderen Konstanten mitmessen — `npm run test:driving` deckt genau das auf.
+
+## Sim-Testskripte müssen `k.t` selbst pflegen — 2026-07-18
+Ein KI-Testlauf gegen `updateAI` ergab 98 % Gras und 1 km/h — sah aus wie ein kaputtes Spiel,
+war aber der Testaufbau. `updateAI` zielt auf `curve.pointAt(k.t + 0.025)`, aktualisiert `k.t`
+aber **nicht** selbst; im Rennen macht das `updateProgress` in der RaceScene-Schleife. Ohne das
+zielt die KI ewig auf denselben Punkt, kreist darum und landet im Gras.
+**Regel:** In jeder Sim-Schleife außerhalb von RaceScene `k.t = curve.project(k.x, k.z).t`
+setzen (oder `updateProgress` aufrufen), bevor `updateAI` läuft. Bei absurden Messwerten zuerst
+den eigenen Testaufbau verdächtigen, nicht den Produktivcode.
+
 ## MeshPhysicalMaterial `transmission` ist ein Perf-Killer — 2026-07-11
 Ein Glas-Material mit `transmission > 0` löst je Objekt einen KOMPLETTEN zusätzlichen
 Szenen-Renderpass aus. Vier Karts mit Windschutz-Glas: 317 → 561 Draw-Calls/Bild.
