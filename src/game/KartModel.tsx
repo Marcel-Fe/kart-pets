@@ -4,7 +4,7 @@ import { Billboard, useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { PetFigure } from './PetFigure'
 import { ViperKart, KART_SEAT, type KartParts } from './ViperKart'
-import { steerFromTilt, diveFromAccel } from './kartVisual'
+import { steerFromTilt, diveFromAccel, initCheer, updateCheer, waveAt } from './kartVisual'
 import { asset } from '../utils/asset'
 import type { KartState } from './raceSim'
 import type { EarType } from '../types'
@@ -41,6 +41,10 @@ function DriverSprite({ url, y, kart }: { url: string; y: number; kart: KartStat
   const hop = useRef(0)
   const wasBoosting = useRef(false)
 
+  // Jubel-Geste ("winken wie bei Mario") – Logik in kartVisual.ts, damit sie ohne
+  // Three.js testbar ist. Zustand lebt lokal, KartState bleibt unberührt.
+  const cheerState = useRef(initCheer(kart.rank, kart.finished))
+
   useFrame((_, delta) => {
     const g = inner.current
     if (!g) return
@@ -48,10 +52,14 @@ function DriverSprite({ url, y, kart }: { url: string; y: number; kart: KartStat
     const t = performance.now() * 0.001
     const fast = Math.min(1, Math.abs(kart.speed) / 18)
 
+    // Auslöser: überholen (kurz) und über die Ziellinie fahren (ausgiebig).
+    const cheerAmt = updateCheer(cheerState.current, kart.rank, kart.finished, dt)
+    const wave = waveAt(t, cheerAmt)
+
     // Kurvenneigung (visualTilt trägt den Lenkeinschlag bereits), im Drift stärker
     const target = steerFromTilt(kart.visualTilt) * (kart.drifting ? 1.5 : 1.0)
     lean.current += (target - lean.current) * Math.min(1, dt * 10)
-    g.rotation.z = -lean.current
+    g.rotation.z = -lean.current + wave * 0.3
 
     // Boost-Start löst einen Hüpfer aus, der weich ausklingt
     const boosting = kart.boostTime > 0
@@ -62,11 +70,13 @@ function DriverSprite({ url, y, kart }: { url: string; y: number; kart: KartStat
 
     // Wippen: schneller und höher, je flotter das Kart fährt
     const bob = Math.sin(t * 9 + kart.x * 0.3) * 0.035 * fast
-    g.position.y = bob + jump
+    // Beim Jubeln richtet er sich im Sitz auf und schwingt mit
+    const standUp = cheerAmt * 0.16
+    g.position.y = bob + jump + standUp + Math.abs(wave) * 0.09
 
     // Im Drift duckt sich der Fahrer leicht, beim Boost streckt er sich
     const duck = kart.drifting ? 0.94 : 1
-    const stretch = 1 + jump * 0.5
+    const stretch = 1 + jump * 0.5 + cheerAmt * 0.06
     g.scale.set(1, duck * stretch, 1)
   })
 

@@ -4,11 +4,15 @@
 import {
   updatePlayer,
   updateAI,
+  updateProgress,
+  resolveCollisions,
+  rankKarts,
   speedKmh,
   NEUTRAL_UPGRADES,
   type KartState,
   type PlayerInput,
 } from '../src/game/raceSim.ts'
+import { initCheer, updateCheer } from '../src/game/kartVisual.ts'
 import { getPet, AI_STYLES } from '../src/data/pets.ts'
 import { TRACKS, ROAD_WIDTH } from '../src/data/tracks.ts'
 import { TrackCurve } from '../src/game/trackCurve.ts'
@@ -244,6 +248,58 @@ for (const track of TRACKS) {
   console.log(`  ${track.name.padEnd(22)} ${r1(lap.seconds)} s,  ${r1(lap.grassPct)}% im Gras,  Schnitt ${lap.avgKmh} km/h${flag}`)
 }
 
+// --- Jubel-Geste im echten Rennverlauf ---
+// Beweist, dass das Winken keine tote Funktion ist: ein volles 4-Kart-Rennen
+// simulieren und zaehlen, wie oft die Geste tatsaechlich ausgeloest wird.
+function cheerCountsInRace(track: (typeof TRACKS)[number], laps = 2) {
+  const c = new TrackCurve(track, 400)
+  const ids = ['fynnox', 'pompao', 'zippo', 'drako']
+  const field = ids.map((id, i) => {
+    const k = makeKart(id)
+    k.isPlayer = false
+    k.aiStyle = AI_STYLES[i % AI_STYLES.length]
+    const p = c.pointAt(0)
+    const nor = c.normals[0]
+    // Startaufstellung: leicht versetzt nebeneinander
+    k.x = p.x + nor.x * (i - 1.5) * 3
+    k.z = p.z + nor.z * (i - 1.5) * 3
+    k.heading = c.headingAt(0)
+    return k
+  })
+  const cheers = field.map((k) => initCheer(k.rank, k.finished))
+  const triggered = field.map(() => 0)
+  let order = 0
+
+  const maxSteps = 180 / DT
+  for (let step = 0; step < maxSteps; step++) {
+    for (const k of field) {
+      if (k.finished) continue
+      const proj = c.project(k.x, k.z)
+      k.t = proj.t
+      updateAI(k, c, proj.lateral, DT)
+      const after = c.project(k.x, k.z)
+      updateProgress(k, after.t, laps, () => ++order)
+    }
+    resolveCollisions(field)
+    rankKarts(field)
+    field.forEach((k, i) => {
+      const before = cheers[i].remaining
+      const amt = updateCheer(cheers[i], k.rank, k.finished, DT)
+      // Neustart der Geste = Auslösung (Restzeit springt nach oben)
+      if (cheers[i].remaining > before + 0.001) triggered[i]++
+      void amt
+    })
+    if (field.every((k) => k.finished)) break
+  }
+  return { triggered, names: field.map((k) => k.name), allFinished: field.every((k) => k.finished) }
+}
+
+console.log('\n--- Jubel-Geste im simulierten Rennen (4 Karts, 2 Runden) ---')
+const race = cheerCountsInRace(TRACKS[0])
+race.names.forEach((n, i) => console.log(`  ${n.padEnd(12)} winkt ${race.triggered[i]}x`))
+const totalCheers = race.triggered.reduce((a, b) => a + b, 0)
+console.log(`  Gesamt ${totalCheers} Gesten, alle im Ziel: ${race.allFinished}`)
+
 console.log('\n=== Plausibilitaets-Checks ===')
 // Arcade-Kart: Vollgas soll sich zuegig anfuehlen, aber nicht sofort am Anschlag sein.
 ok('Beschleunigung 0->90% zwischen 1 und 4 s', t90 > 1 && t90 < 4, `${r2(t90)} s`)
@@ -258,6 +314,9 @@ ok('Enge Kurven erzwingen Drift oder Bremsen', normalTurn.radius > globalTightes
 ok('Drift schafft die engste Kurve', driftTurn.radius <= globalTightest, `${r1(driftTurn.radius)} u vs ${r1(globalTightest)} u`)
 ok('KI bleibt weitgehend auf der Strecke (<12% Gras)', worstGrass < 12, `${r1(worstGrass)}%`)
 ok('KI faehrt eine Runde in unter 60 s', slowestLap < 60, `${r1(slowestLap)} s`)
+ok('Jubel-Geste loest im Rennen tatsaechlich aus', totalCheers > 0, `${totalCheers} Gesten`)
+ok('Jubel-Geste bleibt sparsam (kein Dauerwinken)', totalCheers < 40, `${totalCheers} Gesten`)
+ok('alle Karts kommen ins Ziel', race.allFinished)
 void grassSteps
 
 console.log(fails ? `\n${fails} FEHLER` : '\nAlle Checks bestanden')

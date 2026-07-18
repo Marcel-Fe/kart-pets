@@ -4,6 +4,12 @@ import {
   MAX_STEER,
   MAX_DIVE,
   TILT_REF,
+  initCheer,
+  updateCheer,
+  waveAt,
+  CHEER_OVERTAKE,
+  CHEER_FINISH,
+  CHEER_COOLDOWN,
 } from '../src/game/kartVisual.ts'
 
 let fails = 0
@@ -42,6 +48,67 @@ const near = (a: number, b: number) => Math.abs(a - b) < 1e-9
   const withClampedDt = diveFromAccel(-dv / 0.05)
   ok('echter delta gibt sanftes Nicken', withRealDelta > 0 && withRealDelta < 0.01, `${withRealDelta}`)
   ok('geklemmtes dt uebertreibt um ~10x', near(withClampedDt / withRealDelta, 10), `${withClampedDt / withRealDelta}`)
+}
+
+// --- Jubel-Geste (Winken) ---
+{
+  const DT = 1 / 60
+  // Ruhezustand: kein Winken, solange sich nichts tut
+  const calm = initCheer(3)
+  let amt = 0
+  for (let i = 0; i < 120; i++) amt = updateCheer(calm, 3, false, DT)
+  ok('ohne Anlass wird nicht gewunken', amt === 0, `${amt}`)
+
+  // Ueberholen loest die Geste aus
+  const over = initCheer(3)
+  const started = updateCheer(over, 2, false, DT)
+  ok('ueberholen loest Winken aus', started > 0 && over.remaining > 1, `rest ${over.remaining.toFixed(2)} s`)
+
+  // ... und sie klingt nach CHEER_OVERTAKE wieder aus
+  let steps = 1
+  while (over.remaining > 0 && steps < 600) {
+    updateCheer(over, 2, false, DT)
+    steps++
+  }
+  ok('Winken endet nach ~CHEER_OVERTAKE', Math.abs(steps * DT - CHEER_OVERTAKE) < 0.1, `${(steps * DT).toFixed(2)} s`)
+
+  // Sperre: enger Positionskampf darf kein Dauerwinken ausloesen
+  const flap = initCheer(3)
+  updateCheer(flap, 2, false, DT) // Ueberholen -> Geste + Sperre
+  const restAfterFirst = flap.remaining
+  updateCheer(flap, 3, false, DT) // zurueckgefallen
+  updateCheer(flap, 2, false, DT) // wieder vorbei -> darf NICHT neu ausloesen
+  ok('Sperre verhindert Dauerwinken', flap.remaining < restAfterFirst, `${flap.remaining.toFixed(2)} s`)
+  ok('Sperre laeuft ueber CHEER_COOLDOWN', flap.cooldown > CHEER_COOLDOWN - 0.1, `${flap.cooldown.toFixed(2)} s`)
+
+  // Zielankunft jubelt laenger als ein Ueberholvorgang
+  const fin = initCheer(1)
+  updateCheer(fin, 1, true, DT)
+  ok('Zielankunft jubelt laenger', fin.remaining > CHEER_OVERTAKE, `${fin.remaining.toFixed(2)} s`)
+  ok('Zielankunft jubelt ~CHEER_FINISH', Math.abs(fin.remaining - CHEER_FINISH) < 0.1, `${fin.remaining.toFixed(2)} s`)
+
+  // Ein einmal ausgeloester Zieljubel wiederholt sich nicht jeden Frame
+  const before = fin.remaining
+  for (let i = 0; i < 10; i++) updateCheer(fin, 1, true, DT)
+  ok('Zieljubel triggert nicht jeden Frame nach', fin.remaining < before, `${fin.remaining.toFixed(2)} s`)
+
+  // Waehrend der Zielankunft wird das Ueberholen nicht mehr ausgewertet
+  const finOver = initCheer(3)
+  updateCheer(finOver, 3, true, DT)
+  const finRest = finOver.remaining
+  updateCheer(finOver, 1, true, DT)
+  ok('im Ziel loest Rangwechsel kein Extra-Winken aus', finOver.remaining < finRest, `${finOver.remaining.toFixed(2)} s`)
+
+  // Die Kippbewegung schwingt in beide Richtungen und steht bei amount 0 still
+  ok('keine Geste = kein Ausschlag', waveAt(1.234, 0) === 0)
+  let min = Infinity
+  let max = -Infinity
+  for (let i = 0; i < 200; i++) {
+    const v = waveAt(i * DT, 1)
+    min = Math.min(min, v)
+    max = Math.max(max, v)
+  }
+  ok('Winken kippt nach beiden Seiten', min < -0.9 && max > 0.9, `${min.toFixed(2)} .. ${max.toFixed(2)}`)
 }
 
 console.log(fails ? `\n${fails} FEHLER` : '\nAlle Tests bestanden')
