@@ -19,8 +19,9 @@ function SpinningModel({ url, spin }: { url: string; spin: boolean }) {
     box.getCenter(center)
     const scale = 2.2 / Math.max(size.x, size.y, size.z)
     clone.scale.setScalar(scale)
-    // zentrieren und auf den Boden stellen
-    clone.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale)
+    // um den Ursprung zentrieren – die Kamera blickt auf (0,0,0), so ist die
+    // Figur komplett im Bild (statt oben angeschnitten).
+    clone.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
     clone.traverse((o) => {
       const m = o as THREE.Mesh
       if (m.isMesh) {
@@ -44,7 +45,7 @@ function SpinningModel({ url, spin }: { url: string; spin: boolean }) {
 
 export function PetModel3D({ url, spin = true }: { url: string; spin?: boolean }) {
   return (
-    <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 1.5, 4.2], fov: 42 }}>
+    <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0.35, 4.0], fov: 42 }}>
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 8, 5]} intensity={1.6} castShadow />
       <directionalLight position={[-5, 3, -4]} intensity={0.6} color="#88aaff" />
@@ -52,7 +53,7 @@ export function PetModel3D({ url, spin = true }: { url: string; spin?: boolean }
         <SpinningModel url={url} spin={spin} />
         <Environment preset="city" environmentIntensity={0.8} />
       </Suspense>
-      <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={6} blur={2.4} far={4} />
+      <ContactShadows position={[0, -1.15, 0]} opacity={0.5} scale={6} blur={2.4} far={4} />
     </Canvas>
   )
 }
