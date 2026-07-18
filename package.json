@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npm run test:hazards && npm run test:tracks && npm run test:kartvisual && npm run test:career && npm run test:cheer && npm run test:shop && npm run test:kartdesigns && npm run test:rubberband",
+    "test": "npm run test:hazards && npm run test:tracks && npm run test:kartvisual && npm run test:career && npm run test:cheer && npm run test:shop && npm run test:kartdesigns && npm run test:rubberband && npm run test:driving",
     "test:hazards": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-hazards.ts",
     "test:tracks": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-tracks.ts",
     "test:kartvisual": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-kartvisual.ts",
@@ -16,7 +16,8 @@
     "test:cheer": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-cheer.ts",
     "test:shop": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-shop.ts",
     "test:kartdesigns": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-kartdesigns.ts",
-    "test:rubberband": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-rubberband.ts"
+    "test:rubberband": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-rubberband.ts",
+    "test:driving": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/test-driving.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

@@ -49,15 +49,25 @@ export interface KartState {
 }
 
 // --- Tuning-Konstanten (Arcade-Gefühl) ---
-const ACCEL = 26
-const COAST = 12
-const DRAG = 0.6
+// Schwung ist wichtiger als Anschlag: das Kart soll rollen, nicht kleben. Früher
+// bremste Gaswegnehmen (COAST+DRAG ≈ 31 u/s²) härter als Gas geben (26) — das Kart
+// stand fast sofort. Jetzt trägt es sich, dafür baut es Tempo gemächlicher auf.
+const ACCEL = 14.5
+const COAST = 3
+const DRAG = 0.25
 const BASE_MAX = 30
-const TURN = 2.2 // rad/s
+// Wendekreis bei Vollgas ~26 u, engste Streckenkurve ~18 u: enge Kurven gehen nur
+// mit Drift oder vom Gas. Früher (2.2) drehte das Kart enger als jede Kurve — man
+// fuhr überall Vollgas und der Drift-Knopf war funktionslos.
+const TURN = 1.3 // rad/s
 const OFFTRACK_MAX = 13
-const GRASS_DRAG = 22
+// Muss unter ACCEL bleiben, sonst würgt Gras das Kart auf 0 ab statt es nur zu
+// bremsen. Die Klemme auf OFFTRACK_MAX macht den Ausflug ins Grüne teuer genug.
+const GRASS_DRAG = 8
 const DRIFT_TURN_MULT = 1.7
-const DRIFT_CHARGE_RATE = 0.55
+// Ein kurzes Antippen (0.37 s) reichte früher schon für Boost – der Drift hatte
+// kein Timing. Jetzt: ~0.7 s bis boostfähig, ~2.9 s für die volle Leiste.
+const DRIFT_CHARGE_RATE = 0.35
 const BOOST_MULT = 1.6
 const KMH = 3.0
 
